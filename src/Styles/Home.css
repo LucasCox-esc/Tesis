@@ -1,0 +1,41 @@
+/* Contenedor principal */
+.home-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+/* Estilos del título */
+.home-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Tabla de actividades */
+.activity-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.activity-table th,
+.activity-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+/* Encabezado de la tabla */
+.activity-table th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+}
+
+/* Alternar colores en las filas */
+.activity-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+/* Hover en las filas */
+.activity-table tr:hover {
+    background-color: #ddd;
+}
