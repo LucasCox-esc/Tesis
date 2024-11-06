@@ -1,41 +1,55 @@
-/* Contenedor principal */
-.home-container {
-    padding: 20px;
+/* Fondo general en blanco */
+body {
+    background-color: #fff;
+    color: #000;
     font-family: Arial, sans-serif;
 }
 
-/* Estilos del título */
-.home-container h2 {
-    text-align: center;
-    margin-bottom: 20px;
+/* Estilo para el título */
+h2 {
+    color: #e60000; /* Rojo */
 }
 
-/* Tabla de actividades */
-.activity-table {
-    width: 100%;
-    border-collapse: collapse;
+/* Tabla personalizada */
+.p-datatable .p-datatable-thead > tr > th {
+    background-color: #333; /* Negro */
+    color: #fff; /* Blanco */
 }
 
-.activity-table th,
-.activity-table td {
-    padding: 12px;
-    border: 1px solid #ddd;
-    text-align: center;
+.p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background-color: #f7f7f7; /* Blanco suave */
 }
 
-/* Encabezado de la tabla */
-.activity-table th {
-    background-color: #4CAF50;
-    color: white;
-    font-weight: bold;
+.p-datatable .p-datatable-tbody > tr:nth-child(odd) {
+    background-color: #fff;
 }
 
-/* Alternar colores en las filas */
-.activity-table tr:nth-child(even) {
-    background-color: #f2f2f2;
+.p-datatable .p-inputtext,
+.p-datatable .p-dropdown,
+.p-datatable .p-calendar {
+    background-color: #f7f7f7;
+    border: 1px solid #e60000; /* Bordes rojos */
 }
 
-/* Hover en las filas */
-.activity-table tr:hover {
-    background-color: #ddd;
+/* Colores para el progreso */
+.p-inputnumber input {
+    color: #e60000; /* Rojo en el input */
+}
+
+/* Botón agregar fila */
+.p-button.p-button-icon-only,
+.p-button.p-button-text,
+.p-button {
+    background-color: #e60000; /* Fondo rojo */
+    color: #fff; /* Texto blanco */
+    border: none;
+}
+
+.p-button:hover {
+    background-color: #b30000; /* Rojo más oscuro en hover */
+    color: #fff;
+}
+.p-calendar .p-datepicker {
+    background-color: #fff; /* Fondo blanco para evitar transparencia */
+    border: 1px solid #e60000; /* Bordes en rojo */
 }
