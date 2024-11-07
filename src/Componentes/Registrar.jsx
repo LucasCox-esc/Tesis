@@ -25,16 +25,16 @@ export const Registrar = () => {
                         showArrows={false} 
                         interval={2000}
                     >
-                        <div>
-                            <img src="https://cdn-icons-png.flaticon.com/512/2172/2172479.png" alt="Logo 1" style={styles.logo} />
+                       <div>
+                            <img src="https://cdn-icons-png.flaticon.com/512/5807/5807871.png" alt="Logo 1" style={styles.logo} />
                             <p style={styles.carouselText}>Organiza tus proyectos con facilidad y claridad.</p>
                         </div>
                         <div>
-                            <img src="https://cdn-icons-png.flaticon.com/512/2274/2274923.png" alt="Logo 2" style={styles.logo} />
+                            <img src="https://cdn-icons-png.flaticon.com/512/2637/2637283.png" alt="Logo 2" style={styles.logo} />
                             <p style={styles.carouselText}>Monitorea el progreso de cada actividad en tiempo real.</p>
                         </div>
                         <div>
-                            <img src="https://cdn-icons-png.flaticon.com/512/1129/1129445.png" alt="Logo 3" style={styles.logo} />
+                            <img src="https://cdn-icons-png.flaticon.com/512/4388/4388337.png" alt="Logo 3" style={styles.logo} />
                             <p style={styles.carouselText}>Optimiza recursos y maximiza la eficiencia de tu equipo.</p>
                         </div>
                     </Carousel>
