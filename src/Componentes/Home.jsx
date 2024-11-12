@@ -6,6 +6,7 @@ import { InputNumber } from 'primereact/inputnumber';
 import { Button } from 'primereact/button';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { ContextMenu } from 'primereact/contextmenu';
 import { Doughnut } from 'react-chartjs-2';
 import '../Styles/Home.css';
 import 'primereact/resources/themes/saga-blue/theme.css';
@@ -34,6 +35,18 @@ const deserializeRows = (rows) => {
 export const Home = () => {
     const initialRows = deserializeRows(JSON.parse(localStorage.getItem('rows')) || []);
     const [rows, setRows] = useState(initialRows);
+    const [columns, setColumns] = useState(
+        JSON.parse(localStorage.getItem('columns')) || [
+            { field: 'nombre', header: 'Nombre', editor: 'InputText', isEditable: false, backgroundColor: '#ffffff' },
+            { field: 'progreso', header: 'Progreso (%)', editor: 'InputNumber', isEditable: false, backgroundColor: '#ffffff' },
+            { field: 'fechaInicio', header: 'Fecha de Inicio', editor: 'Calendar', isEditable: false, backgroundColor: '#ffffff' },
+            { field: 'fechaFin', header: 'Fecha de Fin', editor: 'Calendar', isEditable: false, backgroundColor: '#ffffff' },
+            { field: 'estado', header: 'Estado', editor: 'Dropdown', isEditable: false, backgroundColor: '#ffffff' },
+            { field: 'persona', header: 'Persona', editor: 'InputText', isEditable: false, backgroundColor: '#ffffff' }
+        ]
+    );
+    const [selectedColumn, setSelectedColumn] = useState(null);
+    const contextMenu = React.useRef(null);
 
     const estadoOptions = [
         { label: 'No iniciado', value: 'No iniciado' },
@@ -43,7 +56,8 @@ export const Home = () => {
 
     useEffect(() => {
         localStorage.setItem('rows', JSON.stringify(serializeRows(rows)));
-    }, [rows]);
+        localStorage.setItem('columns', JSON.stringify(columns));
+    }, [rows, columns]);
 
     const handleInputChange = (index, field, value) => {
         const updatedRows = [...rows];
@@ -51,9 +65,37 @@ export const Home = () => {
         setRows(updatedRows);
     };
 
+    const handleColumnNameChange = (index, value) => {
+        const updatedColumns = [...columns];
+        updatedColumns[index].header = value;
+        setColumns(updatedColumns);
+    };
+
     const addRow = () => {
         const newRow = { nombre: "", progreso: 0, fechaInicio: null, fechaFin: null, estado: "No iniciado", persona: "" };
         setRows([...rows, newRow]);
+    };
+
+    const addColumn = () => {
+        const newField = `campoExtra${columns.length - 5}`;
+        setColumns([
+            ...columns,
+            { field: newField, header: `Extra ${columns.length - 5}`, editor: 'InputText', isEditable: true, backgroundColor: '#ffffff' }
+        ]);
+        setRows(rows.map(row => ({ ...row, [newField]: '' })));
+    };
+
+    const removeColumn = (field) => {
+        setColumns(columns.filter(col => col.field !== field));
+        setRows(rows.map(row => {
+            const updatedRow = { ...row };
+            delete updatedRow[field];
+            return updatedRow;
+        }));
+    };
+
+    const changeColumnColor = (field, color) => {
+        setColumns(columns.map(col => col.field === field ? { ...col, backgroundColor: color } : col));
     };
 
     const renderProgress = (rowData, rowIndex) => {
@@ -61,90 +103,163 @@ export const Home = () => {
             datasets: [
                 {
                     data: [rowData.progreso, 100 - rowData.progreso],
-                    backgroundColor: ['#4caf50', '#e0e0e0'], // Verde para progreso, gris para restante
-                    borderWidth: 0, // Sin borde alrededor del gráfico
+                    backgroundColor: ['#4caf50', '#e0e0e0'],
+                    borderWidth: 0,
                 },
             ],
         };
         const options = {
-            cutout: '80%', // Hace el centro de la dona más grande
+            cutout: '80%',
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false, // Oculta la leyenda
+                    display: false,
                 },
                 tooltip: {
-                    enabled: false, // Desactiva el tooltip
+                    enabled: false,
                 },
             },
         };
 
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                <span style={{ fontSize: '14px', color: '#4caf50', fontWeight: 'bold', marginRight: '5px' }}>
-                    {rowData.progreso}%
-                </span>
-                <div style={{ width: '30px', height: '30px' }}> {/* Tamaño reducido del gráfico */}
+                <InputNumber 
+                    value={rowData.progreso} 
+                    onValueChange={(e) => handleInputChange(rowIndex, 'progreso', e.value)} 
+                    suffix="%" 
+                    showButtons 
+                    min={0} 
+                    max={100} 
+                    style={{ width: '60px', marginRight: '10px' }}
+                />
+                <div style={{ width: '30px', height: '30px' }}>
                     <Doughnut data={data} options={options} />
                 </div>
             </div>
         );
     };
 
+    const renderCell = (rowData, rowIndex, col) => {
+        switch (col.editor) {
+            case 'InputText':
+                return (
+                    <div
+                        onContextMenu={(e) => {
+                            if (col.isEditable) {
+                                e.preventDefault();
+                                setSelectedColumn(col);
+                                contextMenu.current.show(e);
+                            }
+                        }}
+                        style={{ backgroundColor: col.backgroundColor }}
+                    >
+                        <InputText 
+                            value={rowData[col.field]} 
+                            onChange={(e) => handleInputChange(rowIndex, col.field, e.target.value)} 
+                        />
+                    </div>
+                );
+            case 'InputNumber':
+                return col.field === 'progreso' ? renderProgress(rowData, rowIndex) : (
+                    <div
+                        onContextMenu={(e) => {
+                            if (col.isEditable) {
+                                e.preventDefault();
+                                setSelectedColumn(col);
+                                contextMenu.current.show(e);
+                            }
+                        }}
+                        style={{ backgroundColor: col.backgroundColor }}
+                    >
+                        <InputNumber 
+                            value={rowData[col.field]} 
+                            onValueChange={(e) => handleInputChange(rowIndex, col.field, e.value)} 
+                        />
+                    </div>
+                );
+            case 'Calendar':
+                return (
+                    <Calendar 
+                        value={rowData[col.field]} 
+                        onChange={(e) => handleInputChange(rowIndex, col.field, e.value)} 
+                        dateFormat="dd/mm/yy" 
+                        showIcon 
+                    />
+                );
+            case 'Dropdown':
+                return (
+                    <Dropdown 
+                        value={rowData[col.field]} 
+                        options={estadoOptions} 
+                        onChange={(e) => handleInputChange(rowIndex, col.field, e.value)} 
+                        placeholder="Seleccione Estado" 
+                    />
+                );
+            default:
+                return null;
+        }
+    };
+
+    const menuItems = [
+        {
+            label: 'Eliminar columna',
+            command: () => selectedColumn && removeColumn(selectedColumn.field)
+        },
+        {
+            label: 'Cambiar color a rojo',
+            command: () => selectedColumn && changeColumnColor(selectedColumn.field, '#ff4d4d')
+        },
+        {
+            label: 'Cambiar color a azul',
+            command: () => selectedColumn && changeColumnColor(selectedColumn.field, '#4d79ff')
+        },
+        {
+            label: 'Cambiar color a verde',
+            command: () => selectedColumn && changeColumnColor(selectedColumn.field, '#4dff88')
+        }
+    ];
+
     return (
         <div>
             <h2>Gestión de Actividades</h2>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                <Button label="Agregar Fila" icon="pi pi-plus" onClick={addRow} className="custom-button" />
+                <Button label="Agregar Columna" icon="pi pi-plus" onClick={addColumn} className="custom-button" />
+            </div>
+            <ContextMenu model={menuItems} ref={contextMenu} />
             <DataTable value={rows} responsiveLayout="scroll" className="custom-table">
-                <Column header="Nombre" body={(rowData, { rowIndex }) => (
-                    <InputText 
-                        value={rowData.nombre} 
-                        onChange={(e) => handleInputChange(rowIndex, 'nombre', e.target.value)} 
+                {columns.map((col, index) => (
+                    <Column 
+                        key={index} 
+                        header={
+                            <div
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    if (col.isEditable) {
+                                        setSelectedColumn(col);
+                                        contextMenu.current.show(e);
+                                    }
+                                }}
+                                style={{ backgroundColor: col.backgroundColor }}
+                            >
+                                {col.isEditable ? (
+                                    <InputText 
+                                        value={col.header} 
+                                        onChange={(e) => handleColumnNameChange(index, e.target.value)} 
+                                        style={{ width: '100%' }}
+                                    />
+                                ) : (
+                                    col.header
+                                )}
+                            </div>
+                        }
+                        body={(rowData, { rowIndex }) => renderCell(rowData, rowIndex, col)}
                     />
-                )} />
-                
-                <Column header="Progreso (%)" body={(rowData, { rowIndex }) => (
-                    renderProgress(rowData, rowIndex)
-                )} />
-
-                <Column header="Fecha de Inicio" body={(rowData, { rowIndex }) => (
-                    <Calendar 
-                        value={rowData.fechaInicio} 
-                        onChange={(e) => handleInputChange(rowIndex, 'fechaInicio', e.value)} 
-                        dateFormat="dd/mm/yy"
-                        showIcon 
-                    />
-                )} />
-
-                <Column header="Fecha de Fin" body={(rowData, { rowIndex }) => (
-                    <Calendar 
-                        value={rowData.fechaFin} 
-                        onChange={(e) => handleInputChange(rowIndex, 'fechaFin', e.value)} 
-                        dateFormat="dd/mm/yy"
-                        showIcon 
-                    />
-                )} />
-                
-                <Column header="Estado" body={(rowData, { rowIndex }) => (
-                    <Dropdown 
-                        value={rowData.estado} 
-                        options={estadoOptions} 
-                        onChange={(e) => handleInputChange(rowIndex, 'estado', e.value)} 
-                        placeholder="Seleccione Estado"
-                    />
-                )} />
-                
-                <Column header="Persona" body={(rowData, { rowIndex }) => (
-                    <InputText 
-                        value={rowData.persona} 
-                        onChange={(e) => handleInputChange(rowIndex, 'persona', e.target.value)} 
-                    />
-                )} />
+                ))}
             </DataTable>
-            <Button label="Agregar Fila" icon="pi pi-plus" onClick={addRow} className="custom-button mt-3" />
         </div>
     );
 };
 
 export default Home;
-
