@@ -1,13 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Carousel } from 'react-responsive-carousel';
 import 'react-responsive-carousel/lib/styles/carousel.min.css';
 
 export const Login = () => {
     const navigate = useNavigate();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
-    const HomeClick = () => {
-        navigate('/realhome');
+    // Función para manejar el inicio de sesión
+    const handleLogin = async () => {
+        console.log("Intentando iniciar sesión con:", { email, password });
+
+        try {
+            const response = await fetch('http://localhost:3000/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Guardar el token en localStorage
+                localStorage.setItem('token', data.token);
+                alert('Inicio de sesión exitoso');
+                navigate('/realhome');
+            } else {
+                // Mostrar mensaje de error
+                setErrorMessage(data.message || 'Credenciales incorrectas');
+            }
+        } catch (error) {
+            setErrorMessage('Error al conectar con el servidor');
+        }
     };
 
     const RegistrarClick = () => {
@@ -16,12 +47,8 @@ export const Login = () => {
 
     return (
         <div style={styles.container}>
-            {/* Panel izquierdo con fondo celeste y diseño visual */}
-            
             <div style={styles.leftPanel}>
-            <h1 style={styles.title}>Bienvenido de Nuevo</h1>
-                <p style={styles.description}>
-                </p>
+                <h1 style={styles.title}>Bienvenido de Nuevo</h1>
                 <div style={styles.carouselContainer}>
                     <Carousel 
                         autoPlay 
@@ -45,17 +72,28 @@ export const Login = () => {
                         </div>
                     </Carousel>
                 </div>
-                
             </div>
 
-            {/* Panel derecho con formulario de inicio de sesión */}
             <div style={styles.rightPanel}>
                 <div style={styles.formContainer}>
                     <h2 style={styles.loginTitle}>Iniciar Sesión</h2>
                     <p style={styles.welcomeText}>Por favor, ingrese sus credenciales.</p>
-                    <input type="email" placeholder="Correo" style={styles.input} />
-                    <input type="password" placeholder="Contraseña" style={styles.input} />
-                    <button onClick={HomeClick} style={styles.loginButton}>Iniciar Sesión</button>
+                    <input
+                        type="email"
+                        placeholder="Correo"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        style={styles.input}
+                    />
+                    <input
+                        type="password"
+                        placeholder="Contraseña"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        style={styles.input}
+                    />
+                    {errorMessage && <p style={styles.errorText}>{errorMessage}</p>}
+                    <button onClick={handleLogin} style={styles.loginButton}>Iniciar Sesión</button>
                     <div style={styles.linkContainer}>
                         <p>¿No tienes una cuenta? <a href="#" onClick={RegistrarClick} style={styles.link}>Regístrate aquí</a></p>
                     </div>
@@ -65,19 +103,18 @@ export const Login = () => {
     );
 };
 
-// Estilos en línea con paleta de colores celeste, negro y blanco
 const styles = {
     container: {
         display: 'flex',
         height: '100vh',
-        width: '100vw', // Asegura que ocupe todo el ancho de la ventana
-        overflow: 'hidden', // Evita el desplazamiento adicional
+        width: '100vw',
+        overflow: 'hidden',
         fontFamily: 'Arial, sans-serif',
         color: '#333',
     },
     leftPanel: {
         flex: 1,
-        backgroundColor: '#007BFF', // Celeste
+        backgroundColor: '#007BFF',
         color: 'white',
         display: 'flex',
         flexDirection: 'column',
@@ -111,19 +148,13 @@ const styles = {
         lineHeight: '1.4',
         marginBottom: '20px',
     },
-    description: {
-        fontSize: '1.1rem',
-        maxWidth: '300px',
-        textAlign: 'center',
-        marginBottom: '30px',
-    },
     rightPanel: {
         flex: 1,
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         padding: '20px',
-        backgroundColor: '#F7F9FB', // Fondo gris claro
+        backgroundColor: '#F7F9FB',
     },
     formContainer: {
         width: '100%',
@@ -133,17 +164,6 @@ const styles = {
         borderRadius: '12px',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
         textAlign: 'center',
-    },
-    loginTitle: {
-        fontSize: '1.5rem',
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: '15px',
-    },
-    welcomeText: {
-        fontSize: '0.9rem',
-        color: '#666',
-        marginBottom: '25px',
     },
     input: {
         width: '100%',
@@ -158,7 +178,7 @@ const styles = {
         width: '100%',
         padding: '12px',
         fontSize: '1rem',
-        backgroundColor: '#007BFF', // Celeste
+        backgroundColor: '#007BFF',
         color: 'white',
         border: 'none',
         borderRadius: '8px',
@@ -166,16 +186,19 @@ const styles = {
         transition: 'background-color 0.3s',
         marginTop: '10px',
     },
+    errorText: {
+        color: 'red',
+        marginBottom: '10px',
+    },
     linkContainer: {
         marginTop: '20px',
         textAlign: 'center',
     },
     link: {
-        color: '#007BFF', // Celeste
+        color: '#007BFF',
         textDecoration: 'none',
         fontSize: '0.9rem',
         fontWeight: '500',
-        transition: 'color 0.3s',
     },
 };
 
