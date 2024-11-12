@@ -5,17 +5,19 @@ export const RealHome = () => {
     const navigate = useNavigate();
     const [projects, setProjects] = useState([]);
     const [showPopup, setShowPopup] = useState(false);
+    const [showEditPopup, setShowEditPopup] = useState(false);
     const [projectName, setProjectName] = useState('');
+    const [projectImage, setProjectImage] = useState(null);
+    const [projectImageName, setProjectImageName] = useState('');
+    const [editIndex, setEditIndex] = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
 
-    // Cargar proyectos desde el almacenamiento local al iniciar
     useEffect(() => {
         const savedProjects = JSON.parse(localStorage.getItem('projects')) || [];
         setProjects(savedProjects);
     }, []);
 
-    // Guardar proyectos en el almacenamiento local cuando cambian
     useEffect(() => {
         localStorage.setItem('projects', JSON.stringify(projects));
     }, [projects]);
@@ -25,31 +27,58 @@ export const RealHome = () => {
     };
 
     const handleLogout = () => {
-        navigate('/inicio'); // Redirige a "Inicio.jsx"
+        navigate('/inicio');
     };
 
     const handleAddProject = () => {
-        if (projectName.trim() !== "") {
-            const newProjects = [...projects, projectName];
-            setProjects(newProjects);
-            setProjectName('');
-            setShowPopup(false);
-        }
+        const newProject = {
+            name: projectName,
+            image: projectImage || 'https://cdn-icons-png.flaticon.com/128/8162/8162180.png' // Imagen predeterminada
+        };
+        setProjects([...projects, newProject]);
+        setProjectName('');
+        setProjectImage(null);
+        setProjectImageName('');
+        setShowPopup(false);
     };
 
     const handleDeleteProject = (index) => {
         setDeleteIndex(index);
-        setConfirmDelete(true); // Muestra el panel de confirmación
+        setConfirmDelete(true);
     };
 
     const confirmDeleteProject = () => {
         const updatedProjects = projects.filter((_, i) => i !== deleteIndex);
         setProjects(updatedProjects);
-        setConfirmDelete(false); // Cierra el panel de confirmación
+        setConfirmDelete(false);
+    };
+
+    const openEditPopup = (index) => {
+        setEditIndex(index);
+        setProjectName(projects[index].name);
+        setProjectImage(projects[index].image);
+        setProjectImageName('');
+        setShowEditPopup(true);
     };
 
     const handleEditProject = () => {
-        navigate('/home'); // Redirige a "Home.jsx"
+        const updatedProjects = projects.map((project, index) =>
+            index === editIndex ? { name: projectName, image: projectImage || project.image } : project
+        );
+        setProjects(updatedProjects);
+        setShowEditPopup(false);
+        setEditIndex(null);
+        setProjectName('');
+        setProjectImage(null);
+        setProjectImageName('');
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setProjectImage(URL.createObjectURL(file));
+            setProjectImageName(file.name);
+        }
     };
 
     return (
@@ -75,8 +104,8 @@ export const RealHome = () => {
                     <img src="https://cdn-icons-png.flaticon.com/128/1077/1077114.png" alt="Roles Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Roles</p>
                 </div>
-             {/* Espaciador flexible */}
-             <div style={{ flex: 1 }}></div>
+                {/* Espaciador flexible */}
+                <div style={{ flex: 1 }}></div>
                 
                 <div style={styles.navItemContainer} onClick={handleLogout}>
                     <img src="https://cdn-icons-png.flaticon.com/128/1828/1828490.png" alt="Logout Icon" style={styles.navIcon} />
@@ -92,17 +121,17 @@ export const RealHome = () => {
                 </div>
                 
                 <div style={styles.projectGrid}>
-                    {projects.map((name, index) => (
-                        <div key={index} style={styles.projectCard}>
+                    {projects.map((project, index) => (
+                        <div key={index} style={styles.projectCard} onClick={goToProject}>
                             <div style={styles.projectIconContainer}>
-                                <img src="https://cdn-icons-png.flaticon.com/128/8162/8162180.png" alt="Project Icon" style={styles.projectIcon} />
+                                <img src={project.image} alt="Project Icon" style={project.image === 'https://cdn-icons-png.flaticon.com/128/8162/8162180.png' ? styles.projectIcon : styles.uploadedImage} />
                             </div>
-                            <p style={styles.projectText}>{name}</p>
+                            <p style={styles.projectText}>{project.name}</p>
                             <div style={styles.cardButtons}>
-                                <button style={styles.iconButton} onClick={handleEditProject}>
+                                <button style={styles.iconButton} onClick={(e) => {e.stopPropagation(); openEditPopup(index);}}>
                                     <img src="https://cdn-icons-png.flaticon.com/128/3838/3838756.png" alt="Edit" style={styles.icon} />
                                 </button>
-                                <button style={styles.iconButton} onClick={() => handleDeleteProject(index)}>
+                                <button style={styles.iconButton} onClick={(e) => {e.stopPropagation(); handleDeleteProject(index);}}>
                                     <img src="https://cdn-icons-png.flaticon.com/128/6711/6711573.png" alt="Delete" style={styles.icon} />
                                 </button>
                             </div>
@@ -111,7 +140,7 @@ export const RealHome = () => {
                 </div>
             </div>
             
-            {/* Popup de agregar proyecto */}
+            {/* Popup para agregar proyecto */}
             {showPopup && (
                 <div style={styles.popupOverlay}>
                     <div style={styles.popup}>
@@ -123,6 +152,13 @@ export const RealHome = () => {
                             placeholder="Nombre del proyecto"
                             style={styles.input}
                         />
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            style={styles.input}
+                        />
+                        {projectImageName && <p style={styles.fileName}>{projectImageName}</p>}
                         <div style={styles.popupButtonContainer}>
                             <button style={styles.popupButton} onClick={handleAddProject}>Agregar</button>
                             <button style={styles.closeButton} onClick={() => setShowPopup(false)}>Cancelar</button>
@@ -131,7 +167,34 @@ export const RealHome = () => {
                 </div>
             )}
 
-            {/* Panel de confirmación de eliminación */}
+            {/* Popup para editar proyecto */}
+            {showEditPopup && (
+                <div style={styles.popupOverlay}>
+                    <div style={styles.popup}>
+                        <h2 style={styles.popupTitle}>Editar Proyecto</h2>
+                        <input
+                            type="text"
+                            value={projectName}
+                            onChange={(e) => setProjectName(e.target.value)}
+                            placeholder="Nombre del proyecto"
+                            style={styles.input}
+                        />
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            style={styles.input}
+                        />
+                        {projectImageName && <p style={styles.fileName}>{projectImageName}</p>}
+                        <div style={styles.popupButtonContainer}>
+                            <button style={styles.popupButton} onClick={handleEditProject}>Guardar</button>
+                            <button style={styles.closeButton} onClick={() => setShowEditPopup(false)}>Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirmación de eliminación */}
             {confirmDelete && (
                 <div style={styles.popupOverlay}>
                     <div style={styles.confirmPopup}>
@@ -259,6 +322,12 @@ const styles = {
         width: '50%',
         height: '50%',
     },
+    uploadedImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: '50%',
+        objectFit: 'cover',
+    },
     projectText: {
         color: '#FFF',
         fontWeight: '600',
@@ -356,6 +425,11 @@ const styles = {
         fontWeight: 'bold',
         flex: 1,
         boxShadow: '0 4px 12px rgba(217, 83, 79, 0.3)',
+    },
+    fileName: {
+        fontSize: '0.9rem',
+        color: '#333',
+        marginTop: '10px',
     },
 };
 
