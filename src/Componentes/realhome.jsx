@@ -92,7 +92,7 @@ export const RealHome = () => {
                         style={styles.profileImage} 
                     />
                 </div>
-                <div style={styles.navItemContainer}>
+                <div style={styles.navItemContainer} onClick={() => navigate('/realhome')}>
                     <img src="https://cdn-icons-png.flaticon.com/128/1946/1946488.png" alt="Home Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Home</p>
                 </div>
@@ -100,7 +100,7 @@ export const RealHome = () => {
                     <img src="https://cdn-icons-png.flaticon.com/128/622/622669.png" alt="Search Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Buscar</p>
                 </div>
-                <div style={styles.navItemContainer}>
+                <div style={styles.navItemContainer} onClick={() => navigate('/roles')}>
                     <img src="https://cdn-icons-png.flaticon.com/128/1077/1077114.png" alt="Roles Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Roles</p>
                 </div>
@@ -119,6 +119,9 @@ export const RealHome = () => {
                     <h1 style={styles.title}>Gestión de Proyectos</h1>
                     <button style={styles.addButton} onClick={() => setShowPopup(true)}>+ Nuevo Proyecto</button>
                 </div>
+                <p style={styles.description}>
+                    A continuación, se muestra la lista de proyectos gestionados en el sistema. Aquí puedes crear, editar y eliminar proyectos según sea necesario.
+                </p>
                 
                 <div style={styles.projectGrid}>
                     {projects.map((project, index) => (
@@ -217,6 +220,11 @@ const styles = {
         width: '100vw',
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         backgroundColor: '#f3f6f9',
+    },
+    description: {
+        fontSize: '1rem',
+        color: '#555',
+        marginBottom: '20px',
     },
     sidebar: {
         width: '260px',

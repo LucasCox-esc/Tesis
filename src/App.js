@@ -5,6 +5,8 @@ import { Login } from './Componentes/Login';
 import { Registrar } from './Componentes/Registrar';
 import { Home } from './Componentes/Home';
 import {RealHome} from './Componentes/realhome';
+import {Roles} from './Componentes/Roles';
+
 
 function App() {
     return (
@@ -16,6 +18,8 @@ function App() {
                 <Route path="/registrar" element={<Registrar />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/realhome" element={<RealHome />} />
+                <Route path="/roles" element={<Roles />} />
+
             </Routes>
         </Router>
     );
