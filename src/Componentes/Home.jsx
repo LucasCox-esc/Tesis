@@ -94,11 +94,18 @@ export const Home = () => {
         }));
     };
 
-    const changeColumnHeader = (field) => {
-        const newHeader = prompt('Ingrese el nuevo nombre de la columna:', columns.find(col => col.field === field)?.header || '');
-        if (newHeader) {
-            setColumns(columns.map(col => col.field === field ? { ...col, header: newHeader } : col));
-        }
+    const handleHeaderChange = (col, value) => {
+        setColumns(columns.map(column => column.field === col.field ? { ...column, header: value } : column));
+    };
+
+    const renderHeader = (col) => {
+        return (
+            <InputText
+                value={col.header}
+                onChange={(e) => handleHeaderChange(col, e.target.value)}
+                style={{ width: '100%', fontWeight: 'bold', color: '#ddd', backgroundColor: 'transparent', border: 'none', textAlign: 'center' }}
+            />
+        );
     };
 
     const renderProgress = (rowData, rowIndex) => {
@@ -126,7 +133,7 @@ export const Home = () => {
         };
 
         return (
-            <div style={{ position: 'relative', display: 'inline-block', width:"250px" }}>
+            <div style={{ position: 'relative', display: 'inline-block', width: "100px" }}>
                 <InputNumber
                     value={rowData.progreso}
                     onValueChange={(e) => handleInputChange(rowIndex, 'progreso', e.value)}
@@ -135,12 +142,13 @@ export const Home = () => {
                     min={0}
                     max={100}
                     className="custom-input"
+                    style={{ width: '50px' }} // Reduce el ancho del input de progreso
                 />
                 <div
                     style={{
                         position: 'absolute',
                         top: '50%',
-                        left: '160px',
+                        left: '60px',
                         transform: 'translateY(-50%)',
                         width: '30px',
                         height: '30px',
@@ -276,7 +284,7 @@ export const Home = () => {
                         <Column
                             key={col.field}
                             field={col.field}
-                            header={col.header}
+                            header={renderHeader(col)} // Renderiza el encabezado editable por defecto
                             body={(rowData, { rowIndex }) => renderCell(rowData, rowIndex, col)}
                             headerStyle={{ backgroundColor: '#444', color: '#ddd' }}
                         />
