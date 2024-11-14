@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Calendar } from 'primereact/calendar';
 import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
@@ -33,20 +33,22 @@ const deserializeRows = (rows) => {
 };
 
 export const Home = () => {
-    const initialRows = deserializeRows(JSON.parse(localStorage.getItem('rows')) || []);
-    const [rows, setRows] = useState(initialRows);
+    const [pageTitle, setPageTitle] = useState('Gestión de Tareas');
+    const [rows, setRows] = useState(deserializeRows(JSON.parse(localStorage.getItem('rows')) || []));
     const [columns, setColumns] = useState(
         JSON.parse(localStorage.getItem('columns')) || [
-            { field: 'nombre', header: 'Nombre', editor: 'InputText', isEditable: false, backgroundColor: '#ffffff' },
-            { field: 'progreso', header: 'Progreso (%)', editor: 'InputNumber', isEditable: false, backgroundColor: '#ffffff' },
-            { field: 'fechaInicio', header: 'Fecha de Inicio', editor: 'Calendar', isEditable: false, backgroundColor: '#ffffff' },
-            { field: 'fechaFin', header: 'Fecha de Fin', editor: 'Calendar', isEditable: false, backgroundColor: '#ffffff' },
-            { field: 'estado', header: 'Estado', editor: 'Dropdown', isEditable: false, backgroundColor: '#ffffff' },
-            { field: 'persona', header: 'Persona', editor: 'InputText', isEditable: false, backgroundColor: '#ffffff' }
+            { field: 'nombre', header: 'Nombre', editor: 'InputText', isEditable: false },
+            { field: 'progreso', header: 'Progreso (%)', editor: 'InputNumber', isEditable: false },
+            { field: 'fechaInicio', header: 'Fecha de Inicio', editor: 'Calendar', isEditable: false },
+            { field: 'fechaFin', header: 'Fecha de Fin', editor: 'Calendar', isEditable: false },
+            { field: 'estado', header: 'Estado', editor: 'Dropdown', isEditable: false },
+            { field: 'persona', header: 'Persona', editor: 'InputText', isEditable: false }
         ]
     );
+    const [selectedRow, setSelectedRow] = useState(null);
     const [selectedColumn, setSelectedColumn] = useState(null);
-    const contextMenu = React.useRef(null);
+    const rowContextMenu = useRef(null);
+    const [backgroundImage, setBackgroundImage] = useState(null);
 
     const estadoOptions = [
         { label: 'No iniciado', value: 'No iniciado' },
@@ -65,24 +67,22 @@ export const Home = () => {
         setRows(updatedRows);
     };
 
-    const handleColumnNameChange = (index, value) => {
-        const updatedColumns = [...columns];
-        updatedColumns[index].header = value;
-        setColumns(updatedColumns);
-    };
-
     const addRow = () => {
         const newRow = { nombre: "", progreso: 0, fechaInicio: null, fechaFin: null, estado: "No iniciado", persona: "" };
         setRows([...rows, newRow]);
     };
 
     const addColumn = () => {
-        const newField = `campoExtra${columns.length - 5}`;
+        const newField = `extra${columns.length + 1}`;
         setColumns([
             ...columns,
-            { field: newField, header: `Extra ${columns.length - 5}`, editor: 'InputText', isEditable: true, backgroundColor: '#ffffff' }
+            { field: newField, header: `Extra ${columns.length + 1}`, editor: 'InputText', isEditable: true }
         ]);
         setRows(rows.map(row => ({ ...row, [newField]: '' })));
+    };
+
+    const removeRow = (rowData) => {
+        setRows(rows.filter(row => row !== rowData));
     };
 
     const removeColumn = (field) => {
@@ -94,8 +94,11 @@ export const Home = () => {
         }));
     };
 
-    const changeColumnColor = (field, color) => {
-        setColumns(columns.map(col => col.field === field ? { ...col, backgroundColor: color } : col));
+    const changeColumnHeader = (field) => {
+        const newHeader = prompt('Ingrese el nuevo nombre de la columna:', columns.find(col => col.field === field)?.header || '');
+        if (newHeader) {
+            setColumns(columns.map(col => col.field === field ? { ...col, header: newHeader } : col));
+        }
     };
 
     const renderProgress = (rowData, rowIndex) => {
@@ -103,7 +106,7 @@ export const Home = () => {
             datasets: [
                 {
                     data: [rowData.progreso, 100 - rowData.progreso],
-                    backgroundColor: ['#4caf50', '#e0e0e0'],
+                    backgroundColor: ['green', '#b0b0b0'],
                     borderWidth: 0,
                 },
             ],
@@ -123,17 +126,27 @@ export const Home = () => {
         };
 
         return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-                <InputNumber 
-                    value={rowData.progreso} 
-                    onValueChange={(e) => handleInputChange(rowIndex, 'progreso', e.value)} 
-                    suffix="%" 
-                    showButtons 
-                    min={0} 
-                    max={100} 
-                    style={{ width: '60px', marginRight: '10px' }}
+            <div style={{ position: 'relative', display: 'inline-block', width:"250px" }}>
+                <InputNumber
+                    value={rowData.progreso}
+                    onValueChange={(e) => handleInputChange(rowIndex, 'progreso', e.value)}
+                    suffix="%"
+                    showButtons
+                    min={0}
+                    max={100}
+                    className="custom-input"
                 />
-                <div style={{ width: '30px', height: '30px' }}>
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '160px',
+                        transform: 'translateY(-50%)',
+                        width: '30px',
+                        height: '30px',
+                        pointerEvents: 'none'
+                    }}
+                >
                     <Doughnut data={data} options={options} />
                 </div>
             </div>
@@ -141,125 +154,142 @@ export const Home = () => {
     };
 
     const renderCell = (rowData, rowIndex, col) => {
-        switch (col.editor) {
-            case 'InputText':
-                return (
-                    <div
-                        onContextMenu={(e) => {
-                            if (col.isEditable) {
-                                e.preventDefault();
-                                setSelectedColumn(col);
-                                contextMenu.current.show(e);
-                            }
-                        }}
-                        style={{ backgroundColor: col.backgroundColor }}
-                    >
-                        <InputText 
-                            value={rowData[col.field]} 
-                            onChange={(e) => handleInputChange(rowIndex, col.field, e.target.value)} 
-                        />
-                    </div>
-                );
-            case 'InputNumber':
-                return col.field === 'progreso' ? renderProgress(rowData, rowIndex) : (
-                    <div
-                        onContextMenu={(e) => {
-                            if (col.isEditable) {
-                                e.preventDefault();
-                                setSelectedColumn(col);
-                                contextMenu.current.show(e);
-                            }
-                        }}
-                        style={{ backgroundColor: col.backgroundColor }}
-                    >
-                        <InputNumber 
-                            value={rowData[col.field]} 
-                            onValueChange={(e) => handleInputChange(rowIndex, col.field, e.value)} 
-                        />
-                    </div>
-                );
-            case 'Calendar':
-                return (
-                    <Calendar 
-                        value={rowData[col.field]} 
-                        onChange={(e) => handleInputChange(rowIndex, col.field, e.value)} 
-                        dateFormat="dd/mm/yy" 
-                        showIcon 
+        const handleContextMenu = (e) => {
+            e.preventDefault();
+            setSelectedRow(rowData);
+            setSelectedColumn(col);
+            if (rowContextMenu.current) {
+                rowContextMenu.current.show(e);
+            }
+        };
+
+        return (
+            <div style={{ backgroundColor: 'transparent', padding: '8px' }} onContextMenu={handleContextMenu}>
+                {col.editor === 'InputText' && (
+                    <InputText
+                        value={rowData[col.field]}
+                        onChange={(e) => handleInputChange(rowIndex, col.field, e.target.value)}
+                        className="custom-input"
                     />
-                );
-            case 'Dropdown':
-                return (
-                    <Dropdown 
-                        value={rowData[col.field]} 
-                        options={estadoOptions} 
-                        onChange={(e) => handleInputChange(rowIndex, col.field, e.value)} 
-                        placeholder="Seleccione Estado" 
+                )}
+                {col.editor === 'InputNumber' && col.field === 'progreso' ? (
+                    renderProgress(rowData, rowIndex)
+                ) : col.editor === 'InputNumber' ? (
+                    <InputNumber
+                        value={rowData[col.field]}
+                        onValueChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
+                        className="custom-input"
                     />
-                );
-            default:
-                return null;
+                ) : col.editor === 'Calendar' ? (
+                    <Calendar
+                        value={rowData[col.field]}
+                        onChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
+                        dateFormat="dd/mm/yy"
+                        showIcon
+                        style={{ width: '150px' }} // Ancho fijo para los calendarios
+                        className="custom-calendar"
+                    />
+                ) : col.editor === 'Dropdown' ? (
+                    <Dropdown
+                        value={rowData[col.field]}
+                        options={estadoOptions}
+                        onChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
+                        placeholder="Seleccione Estado"
+                        style={{ width: '150px' }} // Ancho fijo para el Dropdown
+                        className="custom-dropdown"
+                    />
+                ) : null}
+            </div>
+        );
+    };
+
+    const handleBackgroundImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setBackgroundImage(reader.result);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    const menuItems = [
-        {
-            label: 'Eliminar columna',
-            command: () => selectedColumn && removeColumn(selectedColumn.field)
-        },
-        {
-            label: 'Cambiar color a rojo',
-            command: () => selectedColumn && changeColumnColor(selectedColumn.field, '#ff4d4d')
-        },
-        {
-            label: 'Cambiar color a azul',
-            command: () => selectedColumn && changeColumnColor(selectedColumn.field, '#4d79ff')
-        },
-        {
-            label: 'Cambiar color a verde',
-            command: () => selectedColumn && changeColumnColor(selectedColumn.field, '#4dff88')
-        }
+    const rowContextMenuModel = [
+        { label: 'Eliminar fila', command: () => removeRow(selectedRow) },
+        { label: 'Eliminar columna', command: () => removeColumn(selectedColumn?.field) },
     ];
 
     return (
-        <div>
-            <h2>Gestión de Actividades</h2>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                <Button label="Agregar Fila" icon="pi pi-plus" onClick={addRow} className="custom-button" />
-                <Button label="Agregar Columna" icon="pi pi-plus" onClick={addColumn} className="custom-button" />
+        <div style={{ display: 'flex' }}>
+            <div style={{
+                width: '250px',
+                height: '100vh',
+                backgroundColor: '#333',
+                color: 'white',
+                padding: '20px',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                boxSizing: 'border-box',
+            }}>
+                <h3>Menú</h3>
             </div>
-            <ContextMenu model={menuItems} ref={contextMenu} />
-            <DataTable value={rows} responsiveLayout="scroll" className="custom-table">
-                {columns.map((col, index) => (
-                    <Column 
-                        key={index} 
-                        header={
-                            <div
-                                onContextMenu={(e) => {
-                                    e.preventDefault();
-                                    if (col.isEditable) {
-                                        setSelectedColumn(col);
-                                        contextMenu.current.show(e);
-                                    }
-                                }}
-                                style={{ backgroundColor: col.backgroundColor }}
-                            >
-                                {col.isEditable ? (
-                                    <InputText 
-                                        value={col.header} 
-                                        onChange={(e) => handleColumnNameChange(index, e.target.value)} 
-                                        style={{ width: '100%' }}
-                                    />
-                                ) : (
-                                    col.header
-                                )}
-                            </div>
-                        }
-                        body={(rowData, { rowIndex }) => renderCell(rowData, rowIndex, col)}
+
+            <div style={{ marginLeft: '250px', padding: '20px', maxHeight: '100vh', overflowY: 'auto', width: "100%" }}>
+                <div
+                    style={{
+                        backgroundColor: "#333",
+                        width: "100%",
+                        height: "35vh",
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        backgroundImage: `url(${backgroundImage})`
+                    }}
+                >
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBackgroundImageChange}
+                        style={{ position: 'absolute', top: 20 }}
                     />
-                ))}
-            </DataTable>
+                </div>
+                <InputText
+                    value={pageTitle}
+                    onChange={(e) => setPageTitle(e.target.value)}
+                    style={{ fontSize: '3.5em', fontWeight: 'bold', border: 'none', backgroundColor: 'transparent', color: '#444444' }}
+                    type="text"
+                    placeholder={pageTitle === '' ? 'Añada su Título' : ''}
+                />
+                
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                    <Button label="" icon="pi pi-plus" onClick={addColumn} />
+                </div>
+
+                <DataTable
+                    value={rows}
+                    paginator rows={10} rowsPerPageOptions={[5, 10, 25]}
+                    style={{ marginTop: '20px', backgroundColor: '#333' }}
+                    contextMenuSelection={selectedRow}
+                    onContextMenuSelectionChange={(e) => setSelectedRow(e.value)}
+                >
+                    {columns.map((col) => (
+                        <Column
+                            key={col.field}
+                            field={col.field}
+                            header={col.header}
+                            body={(rowData, { rowIndex }) => renderCell(rowData, rowIndex, col)}
+                            headerStyle={{ backgroundColor: '#444', color: '#ddd' }}
+                        />
+                    ))}
+                </DataTable>
+                <ContextMenu model={rowContextMenuModel} ref={rowContextMenu} />
+                <Button 
+                    label="" 
+                    icon="pi pi-plus" 
+                    onClick={addRow} 
+                    style={{ marginTop: '10px', marginLeft: '10px' }} // Posición del botón en la esquina inferior izquierda
+                />
+            </div>
         </div>
     );
 };
-
-export default Home;

@@ -7,12 +7,12 @@ body {
 
 /* Estilo para el título */
 h2 {
-    color: #e60000; /* Rojo */
+    color: #4e4e4e; /* Rojo */
 }
 
 /* Tabla personalizada */
 .p-datatable .p-datatable-thead > tr > th {
-    background-color: #333; /* Negro */
+    background-color: #000000; /* Negro */
     color: #fff; /* Blanco */
 }
 
@@ -28,28 +28,29 @@ h2 {
 .p-datatable .p-dropdown,
 .p-datatable .p-calendar {
     background-color: #f7f7f7;
-    border: 1px solid #e60000; /* Bordes rojos */
+    border: 0.5px solid #bdbdbd; /* Bordes rojos */
+    border-radius: 5px;
 }
 
 /* Colores para el progreso */
 .p-inputnumber input {
-    color: #e60000; /* Rojo en el input */
+    color: #616161; /* Rojo en el input */
 }
 
 /* Botón agregar fila */
 .p-button.p-button-icon-only,
 .p-button.p-button-text,
 .p-button {
-    background-color: #e60000; /* Fondo rojo */
+    background-color: #838383; /* Fondo rojo */
     color: #fff; /* Texto blanco */
     border: none;
 }
 
 .p-button:hover {
-    background-color: #b30000; /* Rojo más oscuro en hover */
+    background-color: #5f5f5f; /* Rojo más oscuro en hover */
     color: #fff;
 }
 .p-calendar .p-datepicker {
     background-color: #fff; /* Fondo blanco para evitar transparencia */
-    border: 1px solid #e60000; /* Bordes en rojo */
+    border: 1px solid #5f5f5f; /* Bordes en rojo */
 }
