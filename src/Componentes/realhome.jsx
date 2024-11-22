@@ -7,20 +7,39 @@ export const RealHome = () => {
     const [showPopup, setShowPopup] = useState(false);
     const [showEditPopup, setShowEditPopup] = useState(false);
     const [projectName, setProjectName] = useState('');
+    const [projectDescription, setProjectDescription] = useState(''); 
     const [projectImage, setProjectImage] = useState(null);
     const [projectImageName, setProjectImageName] = useState('');
     const [editIndex, setEditIndex] = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
 
-    useEffect(() => {
-        const savedProjects = JSON.parse(localStorage.getItem('projects')) || [];
-        setProjects(savedProjects);
-    }, []);
+    // Fetch projects from API on component mount
+    const fetchProjects = async () => {
+        const token = localStorage.getItem("token");
+
+        try {
+            const response = await fetch("http://localhost:3000/api/proyectos", {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setProjects(data); // Set projects from API response
+            } else {
+                console.error("Error fetching projects:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Fetch request error:", error.message);
+        }
+    };
 
     useEffect(() => {
-        localStorage.setItem('projects', JSON.stringify(projects));
-    }, [projects]);
+        fetchProjects();
+    }, []);
 
     const goToProject = () => {
         navigate('/home');
@@ -30,16 +49,47 @@ export const RealHome = () => {
         navigate('/inicio');
     };
 
-    const handleAddProject = () => {
-        const newProject = {
-            name: projectName,
-            image: projectImage || 'https://cdn-icons-png.flaticon.com/128/8162/8162180.png' // Imagen predeterminada
-        };
-        setProjects([...projects, newProject]);
-        setProjectName('');
-        setProjectImage(null);
-        setProjectImageName('');
-        setShowPopup(false);
+    const handleAddProject = async () => {
+        if (!projectName || !projectDescription || !projectImage) {
+            alert("Por favor, completa todos los campos y selecciona una imagen.");
+            return;
+        }
+    
+        const formData = new FormData();
+        formData.append("project_name", projectName);
+        formData.append("description", projectDescription);
+        formData.append("image", projectImage);
+    
+        const token = localStorage.getItem("token");
+    
+        try {
+            const response = await fetch("http://localhost:3000/api/proyectos", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: formData
+            });
+    
+            if (response.ok) {
+                // Refresca la lista de proyectos después de agregar uno nuevo
+                fetchProjects();
+
+                // Restablece los campos y cierra el popup
+                setProjectName('');
+                setProjectDescription('');
+                setProjectImage(null);
+                setProjectImageName('');
+                setShowPopup(false);
+            } else {
+                const errorData = await response.json();
+                console.error("Error creating project:", errorData.message || response.statusText);
+                alert("Error creating project: " + (errorData.message || response.statusText));
+            }
+        } catch (error) {
+            console.error("Request error:", error);
+            alert("Request error: " + error.message);
+        }
     };
 
     const handleDeleteProject = (index) => {
@@ -55,20 +105,26 @@ export const RealHome = () => {
 
     const openEditPopup = (index) => {
         setEditIndex(index);
-        setProjectName(projects[index].name);
+        setProjectName(projects[index].project_name);  // Ajuste para el nombre correcto
+        setProjectDescription(projects[index].description); 
         setProjectImage(projects[index].image);
         setProjectImageName('');
         setShowEditPopup(true);
     };
-
+    
     const handleEditProject = () => {
         const updatedProjects = projects.map((project, index) =>
-            index === editIndex ? { name: projectName, image: projectImage || project.image } : project
+            index === editIndex ? { 
+                project_name: projectName, 
+                description: projectDescription,
+                image: projectImage || project.image 
+            } : project
         );
         setProjects(updatedProjects);
         setShowEditPopup(false);
         setEditIndex(null);
         setProjectName('');
+        setProjectDescription('');
         setProjectImage(null);
         setProjectImageName('');
     };
@@ -76,14 +132,13 @@ export const RealHome = () => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setProjectImage(URL.createObjectURL(file));
+            setProjectImage(file); 
             setProjectImageName(file.name);
         }
     };
 
     return (
         <div style={styles.container}>
-            {/* Barra lateral de navegación */}
             <div style={styles.sidebar}>
                 <div style={styles.profileCircle}>
                     <img 
@@ -93,27 +148,24 @@ export const RealHome = () => {
                     />
                 </div>
                 <div style={styles.navItemContainer} onClick={() => navigate('/realhome')}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/1946/1946488.png" alt="Home Icon" style={styles.navIcon} />
-                    <p style={styles.navItem}>Home</p>
+                    <img src="https://cdn-icons-png.flaticon.com/128/4946/4946342.png" alt="Home Icon" style={styles.navIcon} />
+                    <p style={styles.navItem}>Proyectos</p>
                 </div>
-                <div style={styles.navItemContainer}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/622/622669.png" alt="Search Icon" style={styles.navIcon} />
-                    <p style={styles.navItem}>Buscar</p>
+                <div style={styles.navItemContainer} onClick={() => navigate('/calendario')}>
+                    <img src="https://cdn-icons-png.flaticon.com/128/3652/3652267.png" alt="Calendar Icon" style={styles.navIcon} />
+                    <p style={styles.navItem}>Calendario</p>
                 </div>
                 <div style={styles.navItemContainer} onClick={() => navigate('/roles')}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/1077/1077114.png" alt="Roles Icon" style={styles.navIcon} />
+                    <img src="https://cdn-icons-png.flaticon.com/128/5726/5726567.png" alt="Roles Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Roles</p>
                 </div>
-                {/* Espaciador flexible */}
                 <div style={{ flex: 1 }}></div>
-                
                 <div style={styles.navItemContainer} onClick={handleLogout}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/1828/1828490.png" alt="Logout Icon" style={styles.navIcon} />
+                    <img src="https://cdn-icons-png.flaticon.com/128/1176/1176383.png" alt="Logout Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Cerrar Sesión</p>
                 </div>
             </div>
 
-            {/* Contenido principal */}
             <div style={styles.mainContent}>
                 <div style={styles.header}>
                     <h1 style={styles.title}>Gestión de Proyectos</h1>
@@ -127,9 +179,10 @@ export const RealHome = () => {
                     {projects.map((project, index) => (
                         <div key={index} style={styles.projectCard} onClick={goToProject}>
                             <div style={styles.projectIconContainer}>
-                                <img src={project.image} alt="Project Icon" style={project.image === 'https://cdn-icons-png.flaticon.com/128/8162/8162180.png' ? styles.projectIcon : styles.uploadedImage} />
+                                <img src={project.image || 'https://cdn-icons-png.flaticon.com/128/8162/8162180.png'} alt="Project Icon" style={styles.uploadedImage} />
                             </div>
-                            <p style={styles.projectText}>{project.name}</p>
+                            <p style={styles.projectText}>{project.project_name}</p>
+                            <p style={styles.projectDescription}>{project.description}</p>
                             <div style={styles.cardButtons}>
                                 <button style={styles.iconButton} onClick={(e) => {e.stopPropagation(); openEditPopup(index);}}>
                                     <img src="https://cdn-icons-png.flaticon.com/128/3838/3838756.png" alt="Edit" style={styles.icon} />
@@ -143,7 +196,6 @@ export const RealHome = () => {
                 </div>
             </div>
             
-            {/* Popup para agregar proyecto */}
             {showPopup && (
                 <div style={styles.popupOverlay}>
                     <div style={styles.popup}>
@@ -153,6 +205,12 @@ export const RealHome = () => {
                             value={projectName}
                             onChange={(e) => setProjectName(e.target.value)}
                             placeholder="Nombre del proyecto"
+                            style={styles.input}
+                        />
+                        <textarea
+                            value={projectDescription}
+                            onChange={(e) => setProjectDescription(e.target.value)}
+                            placeholder="Descripción del proyecto"
                             style={styles.input}
                         />
                         <input
@@ -170,7 +228,6 @@ export const RealHome = () => {
                 </div>
             )}
 
-            {/* Popup para editar proyecto */}
             {showEditPopup && (
                 <div style={styles.popupOverlay}>
                     <div style={styles.popup}>
@@ -180,6 +237,12 @@ export const RealHome = () => {
                             value={projectName}
                             onChange={(e) => setProjectName(e.target.value)}
                             placeholder="Nombre del proyecto"
+                            style={styles.input}
+                        />
+                        <textarea
+                            value={projectDescription}
+                            onChange={(e) => setProjectDescription(e.target.value)}
+                            placeholder="Descripción del proyecto"
                             style={styles.input}
                         />
                         <input
@@ -197,7 +260,6 @@ export const RealHome = () => {
                 </div>
             )}
 
-            {/* Confirmación de eliminación */}
             {confirmDelete && (
                 <div style={styles.popupOverlay}>
                     <div style={styles.confirmPopup}>
@@ -237,8 +299,8 @@ const styles = {
         boxShadow: '2px 0 12px rgba(0,0,0,0.1)',
     },
     profileCircle: {
-        width: '70px',
-        height: '70px',
+        width: '95px',
+        height: '90px',
         borderRadius: '50%',
         backgroundColor: '#FFF',
         marginBottom: '30px',
@@ -259,12 +321,12 @@ const styles = {
         color: '#FFF',
     },
     navIcon: {
-        width: '24px',
-        height: '24px',
+        width: '30px',
+        height: '30px',
     },
     navItem: {
         fontWeight: '600',
-        fontSize: 'rem',
+        fontSize: '1rem',
         color: '#FFF',
         transition: 'color 0.3s ease',
     },
@@ -340,6 +402,12 @@ const styles = {
         color: '#FFF',
         fontWeight: '600',
         fontSize: '1.2rem',
+        textAlign: 'center',
+        marginBottom: '10px',
+    },
+    projectDescription: {
+        color: '#FFF',
+        fontSize: '1rem',
         textAlign: 'center',
         marginBottom: '10px',
     },

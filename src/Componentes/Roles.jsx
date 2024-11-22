@@ -114,20 +114,22 @@ export const Roles = ({ handleLogout }) => {
                     />
                 </div>
                 <div style={styles.navItemContainer} onClick={() => navigate('/realhome')}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/1946/1946488.png" alt="Home Icon" style={styles.navIcon} />
-                    <p style={styles.navItem}>Home</p>
+                    <img src="https://cdn-icons-png.flaticon.com/128/4946/4946342.png" alt="Home Icon" style={styles.navIcon} />
+                    <p style={styles.navItem}>Proyectos</p>
                 </div>
-                <div style={styles.navItemContainer}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/622/622669.png" alt="Search Icon" style={styles.navIcon} />
-                    <p style={styles.navItem}>Buscar</p>
+                <div style={styles.navItemContainer} onClick={() => navigate('/calendario')}>
+                    <img src="https://cdn-icons-png.flaticon.com/128/3652/3652267.png" alt="Search Icon" style={styles.navIcon} />
+                    <p style={styles.navItem}>Calendario</p>
                 </div>
-                <div style={styles.navItemContainer}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/1077/1077114.png" alt="Roles Icon" style={styles.navIcon} />
+                <div style={styles.navItemContainer} onClick={() => navigate('/roles')}>
+                    <img src="https://cdn-icons-png.flaticon.com/128/5726/5726567.png" alt="Roles Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Roles</p>
                 </div>
+                {/* Espaciador flexible */}
                 <div style={{ flex: 1 }}></div>
+                
                 <div style={styles.navItemContainer} onClick={handleLogout}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/1828/1828490.png" alt="Logout Icon" style={styles.navIcon} />
+                    <img src="https://cdn-icons-png.flaticon.com/128/1176/1176383.png" alt="Logout Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Cerrar Sesión</p>
                 </div>
             </div>
@@ -311,16 +313,16 @@ const styles = {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '20px 0',
+        padding: '40px 0',
         color: '#FFF',
         boxShadow: '2px 0 12px rgba(0,0,0,0.1)',
     },
     profileCircle: {
-        width: '80px',
-        height: '80px',
+        width: '95px',
+        height: '90px',
         borderRadius: '50%',
         backgroundColor: '#FFF',
-        marginBottom: '20px',
+        marginBottom: '30px',
         boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)',
         overflow: 'hidden',
     },
@@ -333,13 +335,13 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        margin: '10px 0',
+        margin: '15px 0',
         cursor: 'pointer',
         color: '#FFF',
     },
     navIcon: {
-        width: '24px',
-        height: '24px',
+        width: '30px',
+        height: '30px',
     },
     navItem: {
         fontWeight: '600',
