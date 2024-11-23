@@ -34,6 +34,19 @@ const deserializeRows = (rows) => {
 
 export const Home = () => {
     const [pageTitle, setPageTitle] = useState('Gestión de Tareas');
+    const [backgroundImage, setBackgroundImage] = useState(null); // Fondo del rectángulo gris oscuro
+    const [circleImage, setCircleImage] = useState(null); // Fondo del círculo
+    const circleInputRef = useRef(null); // Referencia para el input del círculo
+    const handleCircleImageChange = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setCircleImage(reader.result); // Cambiar el fondo del círculo
+            };
+            reader.readAsDataURL(file);
+        }
+    };
     const [rows, setRows] = useState(deserializeRows(JSON.parse(localStorage.getItem('rows')) || []));
     const [columns, setColumns] = useState(
         JSON.parse(localStorage.getItem('columns')) || [
@@ -48,7 +61,7 @@ export const Home = () => {
     const [selectedRow, setSelectedRow] = useState(null);
     const [selectedColumn, setSelectedColumn] = useState(null);
     const rowContextMenu = useRef(null);
-    const [backgroundImage, setBackgroundImage] = useState(null);
+    const fileInputRef = useRef(null); // Referencia para el input de archivo
 
     const estadoOptions = [
         { label: 'No iniciado', value: 'No iniciado' },
@@ -133,23 +146,21 @@ export const Home = () => {
         };
 
         return (
-            <div style={{ position: 'relative', display: 'inline-block', width: "100px" }}>
+            <div style={{ position: 'relative', display: 'inline-block', width: "50px" }}>
                 <InputNumber
                     value={rowData.progreso}
                     onValueChange={(e) => handleInputChange(rowIndex, 'progreso', e.value)}
                     suffix="%"
-                    showButtons
-                    min={0}
-                    max={100}
+                    style={{ width: '10px', fontSize: '12px' }} // Ajuste para reducir el ancho del input
                     className="custom-input"
-                    style={{ width: '50px' }} // Reduce el ancho del input de progreso
                 />
                 <div
                     style={{
                         position: 'absolute',
-                        top: '50%',
+                        top: '13%',
                         left: '60px',
                         transform: 'translateY(-50%)',
+                        transform: 'translateX(310%)',
                         width: '30px',
                         height: '30px',
                         pointerEvents: 'none'
@@ -194,7 +205,7 @@ export const Home = () => {
                         onChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
                         dateFormat="dd/mm/yy"
                         showIcon
-                        style={{ width: '150px' }} // Ancho fijo para los calendarios
+                        style={{ width: '200px', marginLeft: "20px" }}
                         className="custom-calendar"
                     />
                 ) : col.editor === 'Dropdown' ? (
@@ -203,7 +214,7 @@ export const Home = () => {
                         options={estadoOptions}
                         onChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
                         placeholder="Seleccione Estado"
-                        style={{ width: '150px' }} // Ancho fijo para el Dropdown
+                        style={{ width: '200px' }}
                         className="custom-dropdown"
                     />
                 ) : null}
@@ -216,87 +227,164 @@ export const Home = () => {
         if (file) {
             const reader = new FileReader();
             reader.onload = () => {
-                setBackgroundImage(reader.result);
+                setBackgroundImage(reader.result); // Cambiar el fondo del rectángulo
             };
             reader.readAsDataURL(file);
         }
     };
-
     const rowContextMenuModel = [
         { label: 'Eliminar fila', command: () => removeRow(selectedRow) },
         { label: 'Eliminar columna', command: () => removeColumn(selectedColumn?.field) },
     ];
 
     return (
-        <div style={{ display: 'flex' }}>
-            <div style={{
-                width: '250px',
-                height: '100vh',
-                backgroundColor: '#333',
-                color: 'white',
-                padding: '20px',
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                boxSizing: 'border-box',
-            }}>
-                <h3>Menú</h3>
-            </div>
-
-            <div style={{ marginLeft: '250px', padding: '20px', maxHeight: '100vh', overflowY: 'auto', width: "100%" }}>
-                <div
-                    style={{
-                        backgroundColor: "#333",
-                        width: "100%",
-                        height: "35vh",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        backgroundImage: `url(${backgroundImage})`
-                    }}
-                >
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleBackgroundImageChange}
-                        style={{ position: 'absolute', top: 20 }}
-                    />
-                </div>
-                <InputText
-                    value={pageTitle}
-                    onChange={(e) => setPageTitle(e.target.value)}
-                    style={{ fontSize: '3.5em', fontWeight: 'bold', border: 'none', backgroundColor: 'transparent', color: '#444444' }}
-                    type="text"
-                    placeholder={pageTitle === '' ? 'Añada su Título' : ''}
-                />
-                
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-                    <Button label="" icon="pi pi-plus" onClick={addColumn} />
+        <div style={{ overflowY: 'auto' }}>
+            {/* MENU LATERAL */}
+            <div style={{ display: 'flex' }}>
+                {/* Menú lateral */}
+                <div style={{
+                    width: '250px',
+                    height: '100vh',
+                    backgroundColor: '#333',
+                    color: 'white',
+                    padding: '20px',
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    boxSizing: 'border-box',
+                }}>
+                    <h3>Menú</h3>
                 </div>
 
-                <DataTable
-                    value={rows}
-                    paginator rows={10} rowsPerPageOptions={[5, 10, 25]}
-                    style={{ marginTop: '20px', backgroundColor: '#333' }}
-                    contextMenuSelection={selectedRow}
-                    onContextMenuSelectionChange={(e) => setSelectedRow(e.value)}
-                >
-                    {columns.map((col) => (
-                        <Column
-                            key={col.field}
-                            field={col.field}
-                            header={renderHeader(col)} // Renderiza el encabezado editable por defecto
-                            body={(rowData, { rowIndex }) => renderCell(rowData, rowIndex, col)}
-                            headerStyle={{ backgroundColor: '#444', color: '#ddd' }}
+                {/* Contenido principal */}
+                <div style={{ marginLeft: '250px', padding: '20px', width: "100%", overflowX: 'auto' }}>
+                    {/* Rectángulo gris oscuro con fondo dinámico */}
+                    <div
+                        style={{
+                            backgroundColor: "#333",
+                            width: "100%",
+                            height: "35vh",
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            backgroundImage: `url(${backgroundImage})`,
+                            position: 'relative',
+                        }}
+                    >
+                        {/* Botón para cambiar el fondo del rectángulo */}
+                        <Button
+                            icon="pi pi-pencil"
+                            className="p-button-rounded p-button-secondary"
+                            aria-label="Cambiar fondo del rectángulo"
+                            onClick={() => fileInputRef.current.click()}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                            }}
                         />
-                    ))}
-                </DataTable>
-                <ContextMenu model={rowContextMenuModel} ref={rowContextMenu} />
-                <Button 
-                    label="" 
-                    icon="pi pi-plus" 
-                    onClick={addRow} 
-                    style={{ marginTop: '10px', marginLeft: '10px' }} // Posición del botón en la esquina inferior izquierda
-                />
+                        {/* Input de archivo oculto para el rectángulo */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            style={{ display: 'none' }}
+                            onChange={handleBackgroundImageChange}
+                        />
+
+                        {/* Círculo en la esquina inferior izquierda con fondo dinámico */}
+                        <div
+                            style={{
+                                position: 'absolute',
+                                bottom: '10px',
+                                left: '10px',
+                                width: '150px',
+                                height: '150px',
+                                borderRadius: '50%',
+                                overflow: 'hidden',
+                                border: '2px solid white',
+                                backgroundColor: 'white',
+                            }}
+                        >
+                            {circleImage && (
+                                <img
+                                    src={circleImage}
+                                    alt="Fondo del círculo"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            )}
+                            {/* Botón para cambiar el fondo del círculo */}
+                            <Button
+                                icon="pi pi-pencil"
+                                className="p-button-rounded p-button-secondary"
+                                aria-label="Cambiar fondo del círculo"
+                                onClick={() => circleInputRef.current.click()}
+                                style={{
+                                    position: 'absolute',
+                                    bottom: '5px',
+                                    right: '5px',
+                                }}
+                            />
+                            {/* Input de archivo oculto para el círculo */}
+                            <input
+                                ref={circleInputRef}
+                                type="file"
+                                style={{ display: 'none' }}
+                                onChange={handleCircleImageChange}
+                            />
+                        </div>
+                        {/* Input de archivo oculto */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            style={{ display: 'none' }}
+                            onChange={handleBackgroundImageChange}
+                        />
+                    </div>
+                    <div style={{ marginBottom: '-60px' }}>
+                        <InputText
+                            value={pageTitle}
+                            onChange={(e) => setPageTitle(e.target.value)}
+                            className="custom-input-text"
+                            type="text"
+                            placeholder={pageTitle === '' ? 'Añada su Título' : ''}
+                        />
+
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                        <Button label="" icon="pi pi-plus" onClick={addColumn} />
+                    </div>
+                    <div style={{overflowY:'auto', maxHeight:'600px'}}>
+                        <div style={{ overflowX: 'auto', overflowY: 'auto' }}>
+                            <DataTable
+                                value={rows}
+                                paginator rows={10} rowsPerPageOptions={[5, 10, 25]}
+                                style={{ marginTop: '20px', backgroundColor: '#333' }}
+                                contextMenuSelection={selectedRow}
+                                onContextMenuSelectionChange={(e) => setSelectedRow(e.value)}
+                            >
+                                {columns.map((col) => (
+                                    <Column
+                                        key={col.field}
+                                        field={col.field}
+                                        header={renderHeader(col)}
+                                        body={(rowData, { rowIndex }) => renderCell(rowData, rowIndex, col)}
+                                        headerStyle={{ backgroundColor: '#007AFF', color: '#ddd' }}
+                                        style={{ minWidth: '200px' }}
+                                    />
+                                ))}
+                            </DataTable>
+                        </div>
+                        <ContextMenu model={rowContextMenuModel} ref={rowContextMenu} />
+                        <Button
+                            label=""
+                            icon="pi pi-plus"
+                            onClick={addRow}
+                            style={{ marginTop: '10px', marginLeft: '10px' }}
+                        />
+                    </div>
+
+
+                </div>
             </div>
         </div>
     );

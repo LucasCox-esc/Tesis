@@ -54,3 +54,15 @@ h2 {
     background-color: #fff; /* Fondo blanco para evitar transparencia */
     border: 1px solid #5f5f5f; /* Bordes en rojo */
 }
+.custom-input-text {
+    font-size: 80px !important; /* Tamaño de texto */
+    font-weight: bold !important; /* Grosor del texto */
+    border: none !important; /* Sin borde */
+    outline: none !important; /* Sin contorno */
+    box-shadow: none !important; /* Sin sombra */
+    background-color: transparent !important; /* Fondo transparente */
+    color: #444444 !important; /* Color del texto */
+    caret-color: #444444 !important; /* Color del cursor */
+    transform: translateY(-90%),
+
+}
