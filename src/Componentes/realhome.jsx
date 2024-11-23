@@ -14,6 +14,8 @@ export const RealHome = () => {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleteIndex, setDeleteIndex] = useState(null);
 
+
+    
     // Fetch projects from API on component mount
     const fetchProjects = async () => {
         const token = localStorage.getItem("token");
@@ -44,7 +46,9 @@ export const RealHome = () => {
     const goToProject = () => {
         navigate('/home');
     };
-
+    const handleNavigateToHome = () => {
+        navigate('/home');
+    };
     const handleLogout = () => {
         navigate('/inicio');
     };
@@ -97,10 +101,38 @@ export const RealHome = () => {
         setConfirmDelete(true);
     };
 
-    const confirmDeleteProject = () => {
-        const updatedProjects = projects.filter((_, i) => i !== deleteIndex);
-        setProjects(updatedProjects);
-        setConfirmDelete(false);
+    const confirmDeleteProject = async () => {
+        const projectId = projects[deleteIndex]?.project_id;
+    
+        if (!projectId) {
+            alert("ID de proyecto no válido");
+            return;
+        }
+    
+        const token = localStorage.getItem("token");
+    
+        try {
+            const response = await fetch(`http://localhost:3000/api/proyectos/${projectId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+    
+            if (response.ok) {
+                // Llama a fetchProjects para actualizar la lista de proyectos
+                await fetchProjects();
+                setConfirmDelete(false);
+                alert("Proyecto eliminado exitosamente");
+            } else {
+                const errorData = await response.json();
+                console.error("Error deleting project:", errorData);
+                alert("Error al eliminar el proyecto: " + (errorData.message || response.statusText));
+            }
+        } catch (error) {
+            console.error("Error en la solicitud:", error);
+            alert("Error en la solicitud: " + error.message);
+        }
     };
 
     const openEditPopup = (index) => {
@@ -177,13 +209,21 @@ export const RealHome = () => {
                 
                 <div style={styles.projectGrid}>
                     {projects.map((project, index) => (
-                        <div key={index} style={styles.projectCard} onClick={goToProject}>
+                        <div key={index} style={styles.projectCard}>
                             <div style={styles.projectIconContainer}>
                                 <img src={project.image || 'https://cdn-icons-png.flaticon.com/128/8162/8162180.png'} alt="Project Icon" style={styles.uploadedImage} />
                             </div>
                             <p style={styles.projectText}>{project.project_name}</p>
                             <p style={styles.projectDescription}>{project.description}</p>
                             <div style={styles.cardButtons}>
+                            <button style={styles.iconButton}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleNavigateToHome();
+                                    }}
+                                >
+                                    <img src="https://cdn-icons-png.flaticon.com/128/4034/4034219.png" alt="Navigate" style={styles.icon} />
+                                </button>
                                 <button style={styles.iconButton} onClick={(e) => {e.stopPropagation(); openEditPopup(index);}}>
                                     <img src="https://cdn-icons-png.flaticon.com/128/3838/3838756.png" alt="Edit" style={styles.icon} />
                                 </button>
@@ -378,8 +418,8 @@ const styles = {
         position: 'relative',
     },
     projectIconContainer: {
-        width: '60px',
-        height: '60px',
+        width: '100px',
+        height: '100px',
         backgroundColor: '#FFF',
         borderRadius: '50%',
         display: 'flex',
@@ -425,9 +465,20 @@ const styles = {
         justifyContent: 'center',
     },
     icon: {
-        width: '30px',
-        height: '30px',
+        width: '34px',
+        height: '34px',
     },
+    navigateButton: {
+        backgroundColor: 'green',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '5px',
+        borderRadius: '5px',
+        boxShadow: 'none', // Sin sombreado
+        transition: 'all 0.3s ease', // Opcional para animaciones suaves
+    },
+    
+    
     popupOverlay: {
         position: 'fixed',
         top: 0,

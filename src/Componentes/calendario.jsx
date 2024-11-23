@@ -10,14 +10,48 @@ import { useNavigate } from 'react-router-dom';
 const Calendario = () => {
     const [date, setDate] = useState(new Date());
     const navigate = useNavigate();
-
+    const [projects, setProjects] = useState([]);
+    const [selectedProject, setSelectedProject] = useState(null);
     const [activities, setActivities] = useState({});
     const [selectedDate, setSelectedDate] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [newActivity, setNewActivity] = useState({ title: '', type: '', time: '', description: '' });
     const [editMode, setEditMode] = useState(false);
     const [editIndex, setEditIndex] = useState(null);
+    useEffect(() => {
+        // Fetch projects from API
+        const fetchProjects = async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:3000/api/proyectos', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setProjects(data);
+                } else {
+                    console.error('Error fetching projects');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
 
+        fetchProjects();
+    }, []);
+
+    useEffect(() => {
+        // Fetch activities for the selected project
+        if (selectedProject) {
+            const savedActivities = JSON.parse(localStorage.getItem(`activities_${selectedProject}`)) || {};
+            setActivities(savedActivities);
+        } else {
+            setActivities({});
+        }
+    }, [selectedProject]);
     useEffect(() => {
         const savedActivities = JSON.parse(localStorage.getItem('activities')) || {};
         setActivities(savedActivities);
@@ -37,12 +71,12 @@ const Calendario = () => {
     };
 
     const addActivity = () => {
-        const updatedActivities = { 
-            ...activities, 
-            [selectedDate]: [...(activities[selectedDate] || []), newActivity] 
+        const updatedActivities = {
+            ...activities,
+            [selectedDate]: [...(activities[selectedDate] || []), newActivity],
         };
         setActivities(updatedActivities);
-        localStorage.setItem('activities', JSON.stringify(updatedActivities));
+        localStorage.setItem(`activities_${selectedProject}`, JSON.stringify(updatedActivities));
         setNewActivity({ title: '', type: '', time: '', description: '' });
         setShowModal(false);
     };
@@ -78,8 +112,9 @@ const Calendario = () => {
         setNewActivity({ title: '', type: '', time: '', description: '' });
     };
 
+  
     const tileContent = ({ date, view }) => {
-        const dateString = date.toDateString();
+        const dateString = format(date, 'EEEE dd MMMM yyyy', { locale: es });
         if (view === 'month' && activities[dateString]) {
             return <div style={styles.dot}></div>;
         }
@@ -115,6 +150,7 @@ const Calendario = () => {
                     <img src="https://cdn-icons-png.flaticon.com/128/1176/1176383.png" alt="Logout Icon" style={styles.navIcon} />
                     <p style={styles.navItem}>Cerrar Sesión</p>
                 </div>
+                
             </div>
             <div style={styles.mainContent}>
                 <div style={styles.header}>
@@ -122,6 +158,7 @@ const Calendario = () => {
                     <p style={styles.description}>Aquí puedes gestionar tus actividades diarias. Agrega, edita o elimina actividades según sea necesario.</p>
                 </div>
                 <div style={styles.contentContainer}>
+                    
                     <div style={styles.calendarContainer}>
                         <Calendar
                             onChange={handleDateChange}
@@ -131,25 +168,38 @@ const Calendario = () => {
                         />
                     </div>
                     <div style={styles.activityListContainer}>
-                        <h3 style={styles.activityListTitle}>Actividades del día</h3>
-                        <div style={styles.activitiesGrid}>
-                            {(activities[selectedDate] || []).map((activity, index) => (
-                                <div key={index} style={{ ...styles.activityItem, backgroundColor: getColor(activity.type) }}>
-                                    <h4>{activity.title}</h4>
-                                    <p><strong>Hora:</strong> {activity.time}</p>
-                                    <p><strong>Descripción:</strong> {activity.description}</p>
-                                    <div style={styles.activityButtons}>
-                                        <button style={styles.iconButton} onClick={() => openEditActivity(index)}>
-                                            <img src="https://cdn-icons-png.flaticon.com/128/3838/3838756.png" alt="Edit" style={styles.icon} />
-                                        </button>
-                                        <button style={styles.iconButton} onClick={() => deleteActivity(index)}>
-                                            <img src="https://cdn-icons-png.flaticon.com/128/6711/6711573.png" alt="Delete" style={styles.icon} />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+    <h3 style={styles.activityListTitle}>Selecciona un proyecto</h3>
+    <select
+        value={selectedProject}
+        onChange={(e) => setSelectedProject(e.target.value)}
+        style={styles.dropdownStyled}
+    >
+        <option value="">Selecciona un proyecto</option>
+        {projects.map((project) => (
+            <option key={project.project_id} value={project.project_id}>
+                {project.project_name}
+            </option>
+        ))}
+    </select>
+    <h3 style={styles.activityListTitle}>Actividades del día</h3>
+    <div style={styles.activitiesGrid}>
+        {(activities[selectedDate] || []).map((activity, index) => (
+            <div key={index} style={{ ...styles.activityItem, backgroundColor: getColor(activity.type) }}>
+                <h4>{activity.title}</h4>
+                <p><strong>Hora:</strong> {activity.time}</p>
+                <p><strong>Descripción:</strong> {activity.description}</p>
+                <div style={styles.activityButtons}>
+                    <button style={styles.iconButton} onClick={() => openEditActivity(index)}>
+                        <img src="https://cdn-icons-png.flaticon.com/128/3838/3838756.png" alt="Edit" style={styles.icon} />
+                    </button>
+                    <button style={styles.iconButton} onClick={() => deleteActivity(index)}>
+                        <img src="https://cdn-icons-png.flaticon.com/128/6711/6711573.png" alt="Delete" style={styles.icon} />
+                    </button>
+                </div>
+            </div>
+        ))}
+    </div>
+</div>
                 </div>
                 {showModal && (
                     <div style={styles.popupOverlay}>
@@ -423,6 +473,17 @@ const styles = {
         fontSize: '1rem',
         flex: 1,
         boxShadow: '0 4px 12px rgba(217, 83, 79, 0.3)',
+    },
+     dropdownStyled: {
+        width: '100%',
+        padding: '12px',
+        margin: '15px 0',
+        fontSize: '1rem',
+        borderRadius: '8px',
+        border: '1px solid #ddd',
+        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
+        backgroundColor: '#FFF',
+        color: '#333',
     },
 };
 
