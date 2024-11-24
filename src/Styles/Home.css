@@ -1,3 +1,78 @@
+/* Home.css */
+
+/* Estilos para el contenedor principal */
+.main-container {
+  overflow-y: auto;
+  display: flex;
+}
+
+.sidebar-container {
+  padding: 20px;
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Estilos para el título de la página */
+.page-title {
+  margin-bottom: -60px;
+}
+
+.custom-input-text {
+  width: 100%;
+}
+
+/* Estilos para los botones */
+.add-column-btn {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.add-row-btn {
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+/* Estilos para las celdas y sus editores */
+.custom-input {
+  width: 100%;
+}
+
+.custom-dropdown {
+  width: 200px;
+}
+
+.custom-input-number {
+  width: 10px;
+  font-size: 12px;
+}
+
+/* Estilos para el gráfico */
+.doughnut-container {
+  position: absolute;
+  top: 13%;
+  left: 60px;
+  transform: translateY(-50%) translateX(310%);
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+}
+
+.custom-data-table {
+  margin-top: 20px;
+  background-color: #333;
+}
+
+.header-cell {
+  background-color: #007AFF;
+  color: #ddd;
+}
+
+.cell-content {
+  background-color: transparent;
+  padding: 8px;
+}
+
 /* Fondo general en blanco */
 body {
     background-color: #fff;
@@ -24,14 +99,6 @@ h2 {
     background-color: #fff;
 }
 
-.p-datatable .p-inputtext,
-.p-datatable .p-dropdown,
-.p-datatable .p-calendar {
-    background-color: #f7f7f7;
-    border: 0.5px solid #bdbdbd; /* Bordes rojos */
-    border-radius: 5px;
-}
-
 /* Colores para el progreso */
 .p-inputnumber input {
     color: #616161; /* Rojo en el input */
@@ -52,7 +119,7 @@ h2 {
 }
 .p-calendar .p-datepicker {
     background-color: #fff; /* Fondo blanco para evitar transparencia */
-    border: 1px solid #5f5f5f; /* Bordes en rojo */
+    border: 1px solid #3a3a3a; /* Bordes en rojo */
 }
 .custom-input-text {
     font-size: 80px !important; /* Tamaño de texto */
@@ -66,4 +133,20 @@ h2 {
     transform: translateY(-90%),
 
 }
+.custom-input,
+.custom-dropdown,
+.custom-calendar {
+    width: 210px !important; /* Ajusta el tamaño que desees */
+    height: 45px !important;
+    font-size: 20px;
+}
+/* Define estilos para las opciones del ContextMenu */
+.custom-context-menu .p-menuitem {
+  height: 50px; /* Altura de cada opción */
+  line-height: 50px; /* Centrado vertical del texto */
+}
 
+.custom-context-menu .p-menuitem-link {
+  font-size: 18px; /* Tamaño del texto */
+  padding: 15px; /* Espaciado interno */
+}

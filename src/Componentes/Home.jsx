@@ -14,10 +14,27 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { Chart, ArcElement, Tooltip, Legend } from 'chart.js';
 import { useNavigate } from 'react-router-dom';
-
-
+import BackgroundRectangle from './BackgroundRectangle';
+import SidebarMenu from './SidebarMenu';
+import { addLocale } from 'primereact/api';
 
 Chart.register(ArcElement, Tooltip, Legend);
+addLocale('es', {
+    firstDayOfWeek: 1,
+    dayNames: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
+    dayNamesShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
+    dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
+    monthNames: [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ],
+    monthNamesShort: [
+        'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+        'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+    ],
+    today: 'Hoy',
+    clear: 'Limpiar'
+});
 
 const serializeRows = (rows) => {
     return rows.map(row => ({
@@ -39,19 +56,6 @@ export const Home = () => {
     const [pageTitle, setPageTitle] = useState('Gestión de Tareas');
     const navigate = useNavigate();
 
-    const [backgroundImage, setBackgroundImage] = useState(null); // Fondo del rectángulo gris oscuro
-    const [circleImage, setCircleImage] = useState(null); // Fondo del círculo
-    const circleInputRef = useRef(null); // Referencia para el input del círculo
-    const handleCircleImageChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setCircleImage(reader.result); // Cambiar el fondo del círculo
-            };
-            reader.readAsDataURL(file);
-        }
-    };
     const [rows, setRows] = useState(deserializeRows(JSON.parse(localStorage.getItem('rows')) || []));
     const [columns, setColumns] = useState(
         JSON.parse(localStorage.getItem('columns')) || [
@@ -60,13 +64,12 @@ export const Home = () => {
             { field: 'fechaInicio', header: 'Fecha de Inicio', editor: 'Calendar', isEditable: false },
             { field: 'fechaFin', header: 'Fecha de Fin', editor: 'Calendar', isEditable: false },
             { field: 'estado', header: 'Estado', editor: 'Dropdown', isEditable: false },
-            { field: 'persona', header: 'Persona', editor: 'InputText', isEditable: false }
+            { field: 'persona', header: 'Persona', editor: 'Dropdown', isEditable: false }
         ]
     );
     const [selectedRow, setSelectedRow] = useState(null);
     const [selectedColumn, setSelectedColumn] = useState(null);
     const rowContextMenu = useRef(null);
-    const fileInputRef = useRef(null); // Referencia para el input de archivo
 
     const estadoOptions = [
         { label: 'No iniciado', value: 'No iniciado' },
@@ -84,7 +87,6 @@ export const Home = () => {
         updatedRows[index][field] = value;
         setRows(updatedRows);
     };
-    
 
     const addRow = () => {
         const newRow = { nombre: "", progreso: 0, fechaInicio: null, fechaFin: null, estado: "No iniciado", persona: "" };
@@ -157,13 +159,13 @@ export const Home = () => {
                     value={rowData.progreso}
                     onValueChange={(e) => handleInputChange(rowIndex, 'progreso', e.value)}
                     suffix="%"
-                    style={{ width: '10px', fontSize: '12px' }} // Ajuste para reducir el ancho del input
+                    style={{ width: '10px', fontSize: '12px' }}
                     className="custom-input"
                 />
                 <div
                     style={{
                         position: 'absolute',
-                        top: '13%',
+                        top: '15%',
                         left: '60px',
                         transform: 'translateY(-50%)',
                         transform: 'translateX(310%)',
@@ -177,6 +179,7 @@ export const Home = () => {
             </div>
         );
     };
+
     const handleLogout = () => {
         localStorage.removeItem('token'); // Elimina el token o cualquier dato del usuario
         navigate('/inicio'); // Redirige al inicio de sesión
@@ -199,6 +202,12 @@ export const Home = () => {
                         value={rowData[col.field]}
                         onChange={(e) => handleInputChange(rowIndex, col.field, e.target.value)}
                         className="custom-input"
+                        style={{
+                            height: '50px',
+                            width: '100px',
+                            padding: '4px',
+                            fontSize: '20px',
+                        }}
                     />
                 )}
                 {col.editor === 'InputNumber' && col.field === 'progreso' ? (
@@ -208,6 +217,12 @@ export const Home = () => {
                         value={rowData[col.field]}
                         onValueChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
                         className="custom-input"
+                        style={{
+                            height: '50px',
+                            width: '50px',
+                            padding: '4px',
+                            fontSize: '20px',
+                        }}
                     />
                 ) : col.editor === 'Calendar' ? (
                     <Calendar
@@ -215,33 +230,64 @@ export const Home = () => {
                         onChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
                         dateFormat="dd/mm/yy"
                         showIcon
-                        style={{ width: '200px', marginLeft: "20px" }}
+                        locale="es"
                         className="custom-calendar"
+                        style={{
+                            fontSize: '20px', // Tamaño del texto
+                        }}
+                        inputStyle={{
+                            textAlign: 'center', // Centra el texto del campo de entrada
+                        }}
+                    />
+
+                ) : col.editor === 'Dropdown' && col.field === 'persona' ? (
+                    <Dropdown
+                        value={rowData[col.field]}
+                        options={[
+                            { label: 'Juan Pérez', value: 'Juan Pérez' },
+                            { label: 'María López', value: 'María López' },
+                            { label: 'Carlos Sánchez', value: 'Carlos Sánchez' }
+                        ]}
+                        onChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
+                        placeholder="Seleccione Persona"
+                        style={{
+                            width: '150px',
+                            height: '50px',
+                            fontSize: '20px',
+                            lineHeight: '44px', // Centra verticalmente el texto
+                            textAlign: 'center', // Alinea el texto al centro horizontal
+                        }}
+                        className="custom-dropdown"
                     />
                 ) : col.editor === 'Dropdown' ? (
                     <Dropdown
                         value={rowData[col.field]}
-                        options={estadoOptions}
+                        options={[
+                            { label: 'No iniciado', value: 'No iniciado' },
+                            { label: 'En progreso', value: 'En progreso' },
+                            { label: 'Realizado', value: 'Realizado' }
+                        ]}
                         onChange={(e) => handleInputChange(rowIndex, col.field, e.value)}
                         placeholder="Seleccione Estado"
-                        style={{ width: '200px' }}
+                        style={{
+                            width: '150px',
+                            height: '50px',
+                            fontSize: '20px',
+                            lineHeight: '44px', // Centra verticalmente el texto
+                            textAlign: 'center', // Alinea el texto al centro horizontal
+                        }}
                         className="custom-dropdown"
                     />
                 ) : null}
             </div>
+
         );
     };
-
-    const handleBackgroundImageChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setBackgroundImage(reader.result); // Cambiar el fondo del rectángulo
-            };
-            reader.readAsDataURL(file);
-        }
-    };
+    const personaOptions = [
+        { label: 'Juan Pérez', value: 'Juan Pérez' },
+        { label: 'María López', value: 'María López' },
+        { label: 'Carlos Sánchez', value: 'Carlos Sánchez' }
+    ];
     const rowContextMenuModel = [
         { label: 'Eliminar fila', command: () => removeRow(selectedRow) },
         { label: 'Eliminar columna', command: () => removeColumn(selectedColumn?.field) },
@@ -249,121 +295,14 @@ export const Home = () => {
 
     return (
         <div style={{ overflowY: 'auto' }}>
-            {/* MENU LATERAL */}
             <div style={{ display: 'flex' }}>
                 {/* Menú lateral */}
-                <div style={styles.sidebar}>
-                <div style={styles.profileCircle}>
-                    <img 
-                        src="https://cdn-icons-png.flaticon.com/128/1256/1256650.png" 
-                        alt="User Profile" 
-                        style={styles.profileImage} 
-                    />
-                </div>
-                <div style={styles.navItemContainer} onClick={() => navigate('/realhome')}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/4946/4946342.png" alt="Home Icon" style={styles.navIcon} />
-                    <p style={styles.navItem}>Proyectos</p>
-                </div>
-                <div style={styles.navItemContainer} onClick={() => navigate('/calendario')}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/3652/3652267.png" alt="Calendar Icon" style={styles.navIcon} />
-                    <p style={styles.navItem}>Calendario</p>
-                </div>
-                <div style={styles.navItemContainer} onClick={() => navigate('/roles')}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/5726/5726567.png" alt="Roles Icon" style={styles.navIcon} />
-                    <p style={styles.navItem}>Roles</p>
-                </div>
-                <div style={{ flex: 1 }}></div>
-                <div style={styles.navItemContainer} onClick={handleLogout}>
-                    <img src="https://cdn-icons-png.flaticon.com/128/1176/1176383.png" alt="Logout Icon" style={styles.navIcon} />
-                    <p style={styles.navItem}>Cerrar Sesión</p>
-                </div>
-            </div>
-
+                <SidebarMenu />
 
                 {/* Contenido principal */}
-                <div style={{  padding: '20px', width: "100%", overflowX: 'auto' }}>
-                    {/* Rectángulo gris oscuro con fondo dinámico */}
-                    <div
-                        style={{
-                            backgroundColor: "#333",
-                            width: "100%",
-                            height: "35vh",
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            backgroundImage: `url(${backgroundImage})`,
-                            position: 'relative',
-                        }}
-                    >
-                        {/* Botón para cambiar el fondo del rectángulo */}
-                        <Button
-                            icon="pi pi-pencil"
-                            className="p-button-rounded p-button-secondary"
-                            aria-label="Cambiar fondo del rectángulo"
-                            onClick={() => fileInputRef.current.click()}
-                            style={{
-                                position: 'absolute',
-                                top: '10px',
-                                right: '10px',
-                            }}
-                        />
-                        {/* Input de archivo oculto para el rectángulo */}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            style={{ display: 'none' }}
-                            onChange={handleBackgroundImageChange}
-                        />
-
-                        {/* Círculo en la esquina inferior izquierda con fondo dinámico */}
-                        <div
-                            style={{
-                                position: 'absolute',
-                                bottom: '10px',
-                                left: '10px',
-                                width: '150px',
-                                height: '150px',
-                                borderRadius: '50%',
-                                overflow: 'hidden',
-                                border: '2px solid white',
-                                backgroundColor: 'white',
-                            }}
-                        >
-                            {circleImage && (
-                                <img
-                                    src={circleImage}
-                                    alt="Fondo del círculo"
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                />
-                            )}
-                            {/* Botón para cambiar el fondo del círculo */}
-                            <Button
-                                icon="pi pi-pencil"
-                                className="p-button-rounded p-button-secondary"
-                                aria-label="Cambiar fondo del círculo"
-                                onClick={() => circleInputRef.current.click()}
-                                style={{
-                                    position: 'absolute',
-                                    bottom: '5px',
-                                    right: '5px',
-                                }}
-                            />
-                            {/* Input de archivo oculto para el círculo */}
-                            <input
-                                ref={circleInputRef}
-                                type="file"
-                                style={{ display: 'none' }}
-                                onChange={handleCircleImageChange}
-                            />
-                        </div>
-                        {/* Input de archivo oculto */}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            style={{ display: 'none' }}
-                            onChange={handleBackgroundImageChange}
-                        />
-                    </div>
-                    <div style={{ marginBottom: '-60px' }}>
+                <div style={{ padding: '20px', width: "100%", overflowX: 'auto' }}>
+                    <BackgroundRectangle />
+                    <div style={{ marginBottom: '-30px' }}>
                         <InputText
                             value={pageTitle}
                             onChange={(e) => setPageTitle(e.target.value)}
@@ -371,13 +310,12 @@ export const Home = () => {
                             type="text"
                             placeholder={pageTitle === '' ? 'Añada su Título' : ''}
                         />
-
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
                         <Button label="" icon="pi pi-plus" onClick={addColumn} />
                     </div>
-                    <div style={{overflowY:'auto', maxHeight:'600px'}}>
+                    <div style={{ overflowY: 'auto', maxHeight: '600px' }}>
                         <div style={{ overflowX: 'auto', overflowY: 'auto' }}>
                             <DataTable
                                 value={rows}
@@ -392,13 +330,19 @@ export const Home = () => {
                                         field={col.field}
                                         header={renderHeader(col)}
                                         body={(rowData, { rowIndex }) => renderCell(rowData, rowIndex, col)}
-                                        headerStyle={{ backgroundColor: '#007AFF', color: '#ddd' }}
+                                        headerStyle={{ backgroundColor: '#007AFF', color: '#ddd', height: '60px' }}
                                         style={{ minWidth: '200px' }}
                                     />
                                 ))}
                             </DataTable>
                         </div>
-                        <ContextMenu model={rowContextMenuModel} ref={rowContextMenu} />
+                        <ContextMenu
+                            model={rowContextMenuModel}
+                            ref={rowContextMenu}
+                            className="custom-context-menu"
+                            style={{
+                            }}
+                        />
                         <Button
                             label=""
                             icon="pi pi-plus"
@@ -406,84 +350,8 @@ export const Home = () => {
                             style={{ marginTop: '10px', marginLeft: '10px' }}
                         />
                     </div>
-
-
                 </div>
             </div>
         </div>
     );
-    
-};
-
-const styles = {
-    container: {
-        display: 'flex',
-        height: '100vh',
-        width: '100vw',
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        backgroundColor: '#f3f6f9',
-    },
-    description: {
-        fontSize: '1rem',
-        color: '#555',
-        marginBottom: '20px',
-    },
-    sidebar: {
-        width: '260px',
-        backgroundColor: '#007BFF',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '40px 0',
-        color: '#FFF',
-        boxShadow: '2px 0 12px rgba(0,0,0,0.1)',
-    },
-    profileCircle: {
-        width: '95px',
-        height: '90px',
-        borderRadius: '50%',
-        backgroundColor: '#FFF',
-        marginBottom: '30px',
-        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)',
-        overflow: 'hidden',
-    },
-    profileImage: {
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-    },
-    navItemContainer: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        margin: '15px 0',
-        cursor: 'pointer',
-        color: '#FFF',
-    },
-    navIcon: {
-        width: '30px',
-        height: '30px',
-    },
-    navItem: {
-        fontWeight: '600',
-        fontSize: '1rem',
-        color: '#FFF',
-        transition: 'color 0.3s ease',
-    },
-    mainContent: {
-        flex: 1,
-        padding: '40px',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#f3f6f9',
-        overflowY: 'auto',
-    },
-    header: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px',
-    },
-   
-    
 };
