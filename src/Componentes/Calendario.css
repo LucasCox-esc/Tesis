@@ -1,0 +1,59 @@
+/* Calendario.css */
+.react-calendar {
+    border: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+.react-calendar__tile {
+    border-radius: 8px;
+    text-align: center;
+    padding: 10px;
+    background-color: #f9f9f9;
+    font-size: 1rem;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.react-calendar__tile--active {
+    background-color: #FFD966;
+    color: #333;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.react-calendar__tile--now {
+    background-color: #A3D8F4;
+}
+
+.react-calendar__tile:hover {
+    background-color: #FFE4B5;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.react-calendar__month-view__weekdays {
+    font-weight: bold;
+    color: #555;
+    background-color: #FFF;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.react-calendar__month-view__days__day--weekend {
+    color: #d32f2f;
+}
+
+/* Color de fondo para los días con notas */
+.has-note {
+    background-color: #ffebcc !important;
+    color: #333;
+    font-weight: bold;
+}
+
+
+.note-indicator-green { background-color: #90ee90; }
+.note-indicator-yellow { background-color: #ffd700; }
+.note-indicator-orange { background-color: #ffa500; }
+.note-indicator-red { background-color: #ff6347; }
