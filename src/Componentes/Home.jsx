@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import BackgroundRectangle from './BackgroundRectangle';
 import SidebarMenu from './SidebarMenu';
 import { addLocale } from 'primereact/api';
+import { Prueba } from './Prueba';
 
 Chart.register(ArcElement, Tooltip, Legend);
 addLocale('es', {
@@ -64,9 +65,12 @@ export const Home = () => {
             { field: 'fechaInicio', header: 'Fecha de Inicio', editor: 'Calendar', isEditable: false },
             { field: 'fechaFin', header: 'Fecha de Fin', editor: 'Calendar', isEditable: false },
             { field: 'estado', header: 'Estado', editor: 'Dropdown', isEditable: false },
-            { field: 'persona', header: 'Persona', editor: 'Dropdown', isEditable: false }
+            { field: 'persona', header: 'Persona', editor: 'Dropdown', isEditable: false },
+            { field: 'isSubtask', header: 'Es Subtarea', editor: 'Dropdown', isEditable: false },
+            { field: 'parentTask', header: 'Tarea Principal', editor: 'Dropdown', isEditable: false }
         ]
     );
+
     const [selectedRow, setSelectedRow] = useState(null);
     const [selectedColumn, setSelectedColumn] = useState(null);
     const rowContextMenu = useRef(null);
@@ -89,7 +93,29 @@ export const Home = () => {
     };
 
     const addRow = () => {
-        const newRow = { nombre: "", progreso: 0, fechaInicio: null, fechaFin: null, estado: "No iniciado", persona: "" };
+        const newRow = {
+            nombre: "",
+            progreso: 0,
+            fechaInicio: null,
+            fechaFin: null,
+            estado: "No iniciado",
+            persona: "",
+            isSubtask: false,
+            parentTask: null
+        };
+        setRows([...rows, newRow]);
+    };
+    const addSubtask = (parentTask) => {
+        const newRow = {
+            nombre: "",
+            progreso: 0,
+            fechaInicio: null,
+            fechaFin: null,
+            estado: "No iniciado",
+            persona: "",
+            isSubtask: true,
+            parentTask: parentTask
+        };
         setRows([...rows, newRow]);
     };
 
@@ -103,7 +129,8 @@ export const Home = () => {
     };
 
     const removeRow = (rowData) => {
-        setRows(rows.filter(row => row !== rowData));
+        const updatedRows = rows.filter(row => row !== rowData && row.parentTask !== rowData);
+        setRows(updatedRows);
     };
 
     const removeColumn = (field) => {
@@ -207,6 +234,8 @@ export const Home = () => {
                             width: '100px',
                             padding: '4px',
                             fontSize: '20px',
+                            border: 'none',
+                            marginLeft: rowData.isSubtask && col.field === 'nombre' ? '40px' : '0'
                         }}
                     />
                 )}
@@ -290,7 +319,8 @@ export const Home = () => {
     ];
     const rowContextMenuModel = [
         { label: 'Eliminar fila', command: () => removeRow(selectedRow) },
-        { label: 'Eliminar columna', command: () => removeColumn(selectedColumn?.field) },
+        { label: 'Añadir subtarea', command: () => addSubtask(selectedRow) }, // Opción para añadir subtarea
+        { label: 'Eliminar columna', command: () => removeColumn(selectedColumn?.field) }
     ];
 
     return (
@@ -329,7 +359,11 @@ export const Home = () => {
                                         key={col.field}
                                         field={col.field}
                                         header={renderHeader(col)}
-                                        body={(rowData, { rowIndex }) => renderCell(rowData, rowIndex, col)}
+                                        body={(rowData, { rowIndex }) =>
+                                            <div className={rowData.isSubtask ? 'subtask-row' : ''}>
+                                                {renderCell(rowData, rowIndex, col)}
+                                            </div>
+                                        }
                                         headerStyle={{ backgroundColor: '#007AFF', color: '#ddd', height: '60px' }}
                                         style={{ minWidth: '200px' }}
                                     />

@@ -150,3 +150,22 @@ h2 {
   font-size: 18px; /* Tamaño del texto */
   padding: 15px; /* Espaciado interno */
 }
+
+/* Estilo para añadir líneas divisorias entre columnas */
+.p-datatable .p-datatable-tbody > tr > td {
+  border-right: 1px solid #d3d3d3; /* Color de la línea divisoria */
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  border-right: 1px solid #d3d3d3; /* Color de la línea divisoria */
+}
+
+/* Quitar la línea del borde derecho de la última columna */
+.p-datatable .p-datatable-tbody > tr > td:last-child,
+.p-datatable .p-datatable-thead > tr > th:last-child {
+  border-right: none;
+}
+.subtask-row {
+  background-color: #881c1c;
+  font-style: italic;
+}
