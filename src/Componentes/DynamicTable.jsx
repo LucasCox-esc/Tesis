@@ -14,7 +14,7 @@ const DynamicTable = ({ tasks, setTasks }) => {
   const [expanded, setExpanded] = useState([]);
   const [editingCell, setEditingCell] = useState(null);
   const [tempCellValue, setTempCellValue] = useState("");
-  const [editingColumn, setEditingColumn] = useState(null); // Controla la columna en edición
+  const [editingColumn, setEditingColumn] = useState(null); // Controla la columna en ediciÃ³n
   const [tempColumnName, setTempColumnName] = useState(""); // Valor temporal de la columna
   const [contextMenu, setContextMenu] = useState(null);
 
@@ -257,7 +257,7 @@ const DynamicTable = ({ tasks, setTasks }) => {
             </table>
           )}
         </Droppable>
-        <button onClick={addTask} className="add-task-button">
+        <button onClick={addTask} className="add-task-button" style={{backgroundColor: "#3B82F6", border:"none", borderRadius: "2px", color: "white",padding:"5px", marginTop:"20px"}}>
         + Nueva tarea
       </button>
       </DragDropContext>
