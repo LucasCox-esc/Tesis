@@ -3,6 +3,10 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import AddColumnButton from "./AddColumnButton";
 import ContextMenu from "./ContextMenu";
 import "../Styles/DynamicTable.css";
+import { Doughnut } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const DynamicTable = ({ tasks, setTasks }) => {
   const [columns, setColumns] = useState([
@@ -126,9 +130,7 @@ const DynamicTable = ({ tasks, setTasks }) => {
   const renderRows = (taskList, level = 0) => {
     return taskList.map((task) => (
       <React.Fragment key={task.id}>
-        <tr
-          onContextMenu={(e) => handleContextMenu(e, task)}
-        >
+        <tr onContextMenu={(e) => handleContextMenu(e, task)}>
           {columns.map((column) => (
             <td
               key={column.id}
@@ -146,9 +148,7 @@ const DynamicTable = ({ tasks, setTasks }) => {
                   type="text"
                   value={tempCellValue}
                   onChange={(e) => setTempCellValue(e.target.value)}
-                  onBlur={() =>
-                    handleCellEdit(task.id, column.id, tempCellValue)
-                  }
+                  onBlur={() => handleCellEdit(task.id, column.id, tempCellValue)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       handleCellEdit(task.id, column.id, tempCellValue);
@@ -156,6 +156,31 @@ const DynamicTable = ({ tasks, setTasks }) => {
                   }}
                   autoFocus
                 />
+              ) : column.type === "number" && column.id === "progreso" ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span>{task[column.id]}%</span>
+                  <div style={{ width: "40px", height: "40px" }}>
+                    <Doughnut
+                      data={{
+                        labels: ["Progreso", "Restante"],
+                        datasets: [
+                          {
+                            data: [task[column.id] || 0, 100 - (task[column.id] || 0)],
+                            backgroundColor: ["#4CAF50", "#E0E0E0"],
+                            hoverBackgroundColor: ["#45A049", "#BDBDBD"],
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: { display: false },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
               ) : column.id === "name" ? (
                 <>
                   <span
@@ -193,6 +218,7 @@ const DynamicTable = ({ tasks, setTasks }) => {
       </React.Fragment>
     ));
   };
+  
 
   return (
     <div>
