@@ -37,7 +37,7 @@ const AddColumnButton = ({ onAddColumn }) => {
         +
       </button>
       {isMenuOpen && (
-        <div className="add-column-menu">
+        <div className="add-column-menu" style={{marginLeft: "-65px"}}>
           {columnTypes.map((type) => (
             <div
               key={type.id}
